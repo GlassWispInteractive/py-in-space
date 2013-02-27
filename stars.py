@@ -10,7 +10,7 @@ def draw_star(surface, (x,y), color, kind=0, scale=1):
 		surface.set_at((x, y), color)
 	
 	elif kind == 1:
-		r = random.randint(1,4)
+		r = randint(1,4)
 		pygame.draw.circle(surface, color, (x, y), r)
 		
 	elif kind == 2:

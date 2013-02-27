@@ -1,6 +1,7 @@
 import pygame, sys
 from random import randint
 from pygame.locals import *
+import stars as starslib
 
 # default pygame
 pygame.init()
@@ -49,7 +50,8 @@ def renderStarsky(stars):
 		
 	# render stars
 	for x, y, z in stars:
-		pygame.draw.circle(graphics, (60+z%190, 60+z%190, 60+z%190), (x, y), 3, 0)
+		#pygame.draw.circle(graphics, (60+z%190, 60+z%190, 60+z%190), (x, y), 3, 0)
+		starslib.draw_star(graphics, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=4, scale=1)
 	
 	return stars
 
