@@ -13,6 +13,8 @@ tick = 0
 # image render list
 renderImg = dict()
 for e in ['logo', 'player', 'playershot', 'enemy1', 'enemy1shot', 'enemy2', 'enemy2shot', 'enemy3', 'enemy3shot', 'enemy4', 'enemy4shot']:
+
+	
 	renderImg[e] = pygame.image.load('res/' + e + '.png')
 
 # star 3tuple list
@@ -21,7 +23,7 @@ stars = [(randint(50, 850), randint(50, 450), 0) for i in range(randint(5, 10))]
 # variable initiations
 textfont = pygame.font.SysFont("monospace", 28)
 KEYS = [K_UP, K_DOWN, K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_p]
-menu = True
+menu = False
 
 # render functions
 def renderMenu():
@@ -55,9 +57,12 @@ def renderStarsky(stars):
 	
 	return stars
 
+offset = 0
+trigger = 0
+
 def renderShip():
 	''' Render battle ship. '''
-	pass
+	graphics.blit(renderImg['player'], (400, 400))
 
 while True: # main game loop
 	eventList = pygame.event.get()
@@ -68,12 +73,15 @@ while True: # main game loop
 	# reduce events up to key strokes
 	eventList = [e.key for e in eventList if e.type == KEYDOWN and e.key in KEYS]
 	
+	
 	# just accepts the first movement
-#	print eventList
+	if eventList != []: e = eventList [0]
+	
 	
 	graphics.fill((0, 0, 0))
 	stars = renderStarsky(stars)
-	renderMenu()
+	if menu: renderMenu()
+	else: renderShip()
 
 	pygame.display.update()
 	# upper limit to frames
