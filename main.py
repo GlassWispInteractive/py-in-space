@@ -20,7 +20,7 @@ stars = [(randint(50, 850), randint(50, 450), 0) for i in range(randint(5, 10))]
 
 # variable initiations
 textfont = pygame.font.SysFont("monospace", 28)
-KEYS = [K_UP, K_DOWN, K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_p]
+KEYS = [K_UP, K_DOWN, K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_p, K_q]
 menu = True
 
 # render functions
@@ -63,7 +63,8 @@ while True: # main game loop
 	eventList = pygame.event.get()
 	
 	# check for quit event
-	if any(e.type == QUIT for e in eventList): break
+	if any(e.type == QUIT or (e.type == KEYDOWN and e.key == K_q) for e in eventList):
+		break
 	
 	# reduce events up to key strokes
 	eventList = [e.key for e in eventList if e.type == KEYDOWN and e.key in KEYS]
