@@ -5,7 +5,7 @@ import math
 
 def draw_random_star(surface, kind=0, scale=1):
 	x = random.randint(0,899)
-	y = random.randint(0,599)
+	y = random.randint(0,499)
 	c = random.randint(200,255)
 	color = (c,c,c)
 	if kind == 0:
@@ -52,7 +52,7 @@ while True: # main game loop
 	for i in range(1,100):
 		draw_random_star(DISPLAY, 0)
 	
-	pygame.time.wait(5000000)
+
 	
 	pygame.display.update()
 	# upper limit to frames
