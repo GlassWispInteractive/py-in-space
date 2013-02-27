@@ -1,65 +1,65 @@
 import pygame, sys
 from pygame.locals import *
-import random
+from random import randint
 import math
 
-def draw_random_star(surface, kind=0, scale=1):
-	x = random.randint(0,899)
-	y = random.randint(0,599)
-	c = random.randint(200,255)
-	color = (c,c,c)
+def draw_star(surface, (x,y), color, kind=0, scale=1):
+	position = lambda (a,b) : (int(a*scale+x), int(b*scale+y))
+	
 	if kind == 0:
 		surface.set_at((x, y), color)
-	if kind == 1:
+	
+	elif kind == 1:
 		r = random.randint(1,4)
 		pygame.draw.circle(surface, color, (x, y), r)
-	if kind == 2:
-		positionieren = lambda (a,b) : (math.floor(a*scale)+x, math.floor(b*scale)+y)
+		
+	elif kind == 2:
+		"""handdrawn 'dot'"""
+		colors = {
+			'out' : (color[0],color[1],color[2], int(0.5*255)),
+			'mid' : (color[0],color[1],color[2], int(0.3*255)),
+			'inn' : (color[0],color[1],color[2], int(0.1*255))
+		}
+		
+		outer = [(2,0),(4,2),(2,4),(0,2)]
+		outer = list(map(position,outer))
+		for p in outer: surface.set_at(p, colors['out'])
+
+		middle = [(1,1),(3,1),(3,3),(1,3)]
+		middle = list(map(position,middle))
+		for p in middle: surface.set_at(p, colors['mid'])
+
+		inner = [(2,1),(1,2),(2,2),(3,2),(2,3)]
+		inner = list(map(position,inner))
+		for p in inner: surface.set_at(p, colors['inn'])
+		
+	elif kind == 3:
+		"""the real polygon thing"""
 		
 		# karo
 		karo = [(10,0),(20,10),(10,20),(0,10)]
-		karo = list(map(positionieren,karo))
+		karo = list(map(position,karo))
 		pygame.draw.polygon(surface, color, karo)
 		
 		# quadrat
 		quadrat = [(3,3),(17,3),(17,17),(3,17)]
-		quadrat = list(map(positionieren,quadrat))
+		quadrat = list(map(position,quadrat))
 		pygame.draw.polygon(surface, color, quadrat)
-
-# start it
-pygame.init()
-
-# manage window
-DISPLAY = pygame.display.set_mode((900, 500))
-
-# clock object for fps
-#fpsClock = pygame.time.Clock()
-# list of objects to render
-renderList = []
-
-# some colors
-grey = (80, 80, 80)
-silver = (192, 192, 192)
-white = (255, 255, 255)
-
-#textfont = pygame.font.SysFont("monospace", 28)
-
-while True: # main game loop
-	eventList = pygame.event.get()
-	if any(e.type == QUIT for e in eventList):
-		break
 		
-	for i in range(1,100):
-		draw_random_star(DISPLAY, 0)
-	
-	pygame.time.wait(5000000)
-	
-	pygame.display.update()
-	# upper limit to frames
-	#fpsClock.tick(30)
-	
-	break
+	elif kind == 4:
+		"""wrapper for 2 and 3 based on scaling factor"""
+		if scale <= 2:
+			draw_star(surface, (x,y), color, kind=2, scale=scale)
+		else:
+			draw_star(surface, (x,y), color, kind=3, scale=scale)
 
-# halt the game
-pygame.quit()
-sys.exit()
+def draw_random_star(surface, scale=1):
+	x = randint(0,899)
+	y = randint(0,599)
+	c = randint(200,255)
+	kind = randint(0,4)
+	scale = randint(1,10) # ?
+	draw_star(surface, (x,y), (c,c,c), kind, scale)
+		
+def draw_poligon_star(surface, c, (x,y), scale=1):
+	draw_star(surface, c, (x,y), kind=4, scale=scale)
