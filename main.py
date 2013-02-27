@@ -45,7 +45,7 @@ def renderStarsky(stars):
 			stars.append((randint(50, 850), randint(-500, 0), 0))
 	
 	# update and delete stars
-	if tick % 3 == 0: stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7) for x, y, z in stars if y < 500]
+	stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7) for x, y, z in stars if y < 500]
 	if tick % 100 == 0:
 		r = randint(0, len(stars) - 1)
 		if stars[r][2] == 0: stars[r] = (stars[r][0], stars[r][1], 1)
@@ -58,24 +58,33 @@ def renderStarsky(stars):
 	return stars
 
 offset = 0
-trigger = 0
+trigger = None
 
 def renderShip():
 	''' Render battle ship. '''
-	graphics.blit(renderImg['player'], (400, 400))
+	graphics.blit(renderImg['player'], (418+offset, 440))
 
 while True: # main game loop
 	eventList = pygame.event.get()
 	
 	# check for quit event
-	if any(e.type == QUIT for e in eventList): break
+	if any(e.type == QUIT or (e.type == KEYDOWN and e.key == K_q) for e in eventList):
+		break
 	
 	# reduce events up to key strokes
-	eventList = [e.key for e in eventList if e.type == KEYDOWN and e.key in KEYS]
+	eventList = [(e.type, e.key) for e in eventList if (e.type == KEYDOWN or e.type == KEYUP) and e.key in KEYS]
 	
 	
 	# just accepts the first movement
-	if eventList != []: e = eventList [0]
+	if eventList != []:
+		e = eventList [0]
+		
+		if e[0] == KEYDOWN: trigger = e[1]
+		elif e[0] == KEYUP and e[1] == trigger: trigger = None
+
+
+	if	offset > -55 * 7 and trigger == K_LEFT: offset -= 7
+	elif offset < 55 * 7 and trigger == K_RIGHT: offset += 7
 	
 	
 	graphics.fill((0, 0, 0))
