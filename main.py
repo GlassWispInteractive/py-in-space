@@ -18,8 +18,14 @@ menu = True
 keys = [K_UP, K_DOWN, K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_p]
 
 # some colors
-silver = pygame.Color(192, 192, 192)
-darkbrown = pygame.Color(11, 17, 28) # 0B111C
+grey = (80, 80, 80)
+silver = (192, 192, 192)
+
+textfont = pygame.font.SysFont("monospace", 28)
+
+
+logoImg = pygame.image.load('res/logo.png')
+logoPos = (157, 100)
 
 # menu
 def button(stuff):
@@ -34,9 +40,16 @@ while True: # main game loop
 	eventList = [e for e in eventList if e.type == KEYDOWN and e.key in keys]
 	# just accepts the first movement
 	
-	# update graphics
-	pygame.draw.rect(DISPLAYSURF, darkbrown, (200, 150, 100, 50))
-
+	# graphics
+	DISPLAYSURF.blit(logoImg, logoPos)
+	pygame.draw.rect(DISPLAYSURF, silver, (250, 300, 400, 60))
+	pygame.draw.rect(DISPLAYSURF, grey, (260, 305, 380, 50))
+	
+	# label
+	label = textfont.render("Start game!", 1, (200,200,200))
+	labelPos = label.get_rect(centerx=450, centery = 330)
+	DISPLAYSURF.blit(label, labelPos)
+	
 	pygame.display.update()
 	# upper limit to frames
 	fpsClock.tick(30)
