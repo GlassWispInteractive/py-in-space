@@ -2,6 +2,7 @@ import pygame, sys
 from random import randint
 from pygame.locals import *
 import stars as starslib
+from header import draw_header
 
 # default pygame
 pygame.init()
@@ -12,9 +13,8 @@ tick = 0
 
 # image render list
 renderImg = dict()
-for e in ['logo', 'player', 'playershot', 'enemy1', 'enemy1shot', 'enemy2', 'enemy2shot', 'enemy3', 'enemy3shot', 'enemy4', 'enemy4shot']:
-
-	
+for e in ['logo', 'player', 'playershot', 'enemy1', 'enemy1shot', 'enemy2',
+	'enemy2shot', 'enemy3', 'enemy3shot', 'enemy4', 'enemy4shot']:
 	renderImg[e] = pygame.image.load('res/' + e + '.png')
 
 # star 3tuple list
@@ -30,11 +30,11 @@ def renderMenu():
 	''' Render start screen. '''
 	graphics.blit(renderImg['logo'], (157, 100))
 	pygame.draw.rect(graphics, (192, 192, 192), (250, 300, 400, 60))
-	pygame.draw.rect(graphics, (80, 80, 80), (260, 305, 380, 50))
+	pygame.draw.rect(graphics, (80, 80, 80), (255, 305, 390, 50))
 	
 	# label
 	label = textfont.render("Start game!", 1, (200,200,200))
-	labelPos = label.get_rect(centerx=450, centery = 330)
+	labelPos = label.get_rect(centerx = 450, centery = 330)
 	graphics.blit(label, labelPos)
 
 def renderStarsky(stars):
@@ -56,7 +56,7 @@ def renderStarsky(stars):
 		starslib.draw_star(graphics, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=4, scale=1)
 	
 	return stars
-
+	
 offset = 0
 trigger = None
 
@@ -74,23 +74,24 @@ while True: # main game loop
 	# reduce events up to key strokes
 	eventList = [(e.type, e.key) for e in eventList if (e.type == KEYDOWN or e.type == KEYUP) and e.key in KEYS]
 	
-	
 	# just accepts the first movement
 	if eventList != []:
 		e = eventList [0]
-		
 		if e[0] == KEYDOWN: trigger = e[1]
 		elif e[0] == KEYUP and e[1] == trigger: trigger = None
-
-
-	if	offset > -55 * 7 and trigger == K_LEFT: offset -= 7
-	elif offset < 55 * 7 and trigger == K_RIGHT: offset += 7
 	
+	if offset > -55 * 7 and trigger == K_LEFT: offset -= 7
+	elif offset < 55 * 7 and trigger == K_RIGHT: offset += 7
+
+#	print eventList
 	
 	graphics.fill((0, 0, 0))
 	stars = renderStarsky(stars)
 	if menu: renderMenu()
 	else: renderShip()
+	renderMenu()
+
+	draw_header(graphics, 100, 100, 0, 1337)
 
 	pygame.display.update()
 	# upper limit to frames
