@@ -61,7 +61,6 @@ def renderStarsky(stars):
 offset = 0
 trigger = None
 
-
 def renderShip():
 	''' Render battle ship. '''
 	pass
