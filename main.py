@@ -63,7 +63,7 @@ trigger = None
 
 def renderShip():
 	''' Render battle ship. '''
-	pass
+	graphics.blit(renderImg['player'], (418+offset, 440))
 
 while True: # main game loop
 	eventList = pygame.event.get()
@@ -75,9 +75,9 @@ while True: # main game loop
 	# reduce events up to key strokes
 	eventList = [(e.type, e.key) for e in eventList if (e.type == KEYDOWN or e.type == KEYUP) and e.key in KEYS]
 	
-	# just accepts the first movement
-	if eventList != []:
-		e = eventList [0]
+	# iterate over events
+	for e in eventList:
+		print e
 		if e[0] == KEYDOWN: trigger = e[1]
 		elif e[0] == KEYUP and e[1] == trigger: trigger = None
 	
