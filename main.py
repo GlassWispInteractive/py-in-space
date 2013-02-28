@@ -45,7 +45,8 @@ def renderStarsky(stars):
 			stars.append((randint(50, 850), randint(-500, 0), 0))
 	
 	# update and delete stars
-	stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7) for x, y, z in stars if y < 500]
+	if tick % 3 == 0:
+		stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7) for x, y, z in stars if y < 500]
 	if tick % 100 == 0:
 		r = randint(0, len(stars) - 1)
 		if stars[r][2] == 0: stars[r] = (stars[r][0], stars[r][1], 1)
@@ -56,13 +57,14 @@ def renderStarsky(stars):
 		starslib.draw_star(graphics, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=4, scale=1)
 	
 	return stars
-	
+
 offset = 0
 trigger = None
 
+
 def renderShip():
 	''' Render battle ship. '''
-	graphics.blit(renderImg['player'], (418+offset, 440))
+	pass
 
 while True: # main game loop
 	eventList = pygame.event.get()
