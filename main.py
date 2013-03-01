@@ -1,3 +1,4 @@
+# -*- coding: utf-8 *-*
 import pygame, sys
 from random import randint
 from pygame.locals import *
@@ -31,7 +32,7 @@ def renderMenu():
 	graphics.blit(renderImg['logo'], (157, 100))
 	pygame.draw.rect(graphics, (192, 192, 192), (250, 300, 400, 60))
 	pygame.draw.rect(graphics, (80, 80, 80), (255, 305, 390, 50))
-	
+
 	# label
 	label = textfont.render("Start game!", 1, (200,200,200))
 	labelPos = label.get_rect(centerx = 450, centery = 330)
@@ -43,19 +44,19 @@ def renderStarsky(stars):
 	if tick % 100 == 0:
 		for i in range(randint(0, 25 - len(stars))):
 			stars.append((randint(50, 850), randint(-500, 0), 0))
-	
+
 	# update and delete stars
 	if tick % 3 == 0:
 		stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7) for x, y, z in stars if y < 500]
 	if tick % 100 == 0:
 		r = randint(0, len(stars) - 1)
 		if stars[r][2] == 0: stars[r] = (stars[r][0], stars[r][1], 1)
-		
+
 	# render stars
 	for x, y, z in stars:
 		#pygame.draw.circle(graphics, (60+z%190, 60+z%190, 60+z%190), (x, y), 3, 0)
 		starslib.draw_star(graphics, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=4, scale=1)
-	
+
 	return stars
 
 offset = 0
@@ -67,25 +68,24 @@ def renderShip():
 
 while True: # main game loop
 	eventList = pygame.event.get()
-	
+
 	# check for quit event
 	if any(e.type == QUIT or (e.type == KEYDOWN and e.key == K_q) for e in eventList):
 		break
-	
+
 	# reduce events up to key strokes
-	eventList = [(e.type, e.key) for e in eventList if (e.type == KEYDOWN or e.type == KEYUP) and e.key in KEYS]
-	
+	eventList = filter(lambda e: e.type in [KEYDOWN,KEYUP] and e.key in KEYS, eventList)
+
 	# iterate over events
 	for e in eventList:
-		print e
-		if e[0] == KEYDOWN: trigger = e[1]
-		elif e[0] == KEYUP and e[1] == trigger: trigger = None
-	
+		if e.type == KEYDOWN: trigger = e.key
+		elif e.type == KEYUP and e.key == trigger: trigger = None
+
+	if len(eventList) != 0: print eventList
+
 	if offset > -55 * 7 and trigger == K_LEFT: offset -= 7
 	elif offset < 55 * 7 and trigger == K_RIGHT: offset += 7
 
-#	print eventList
-	
 	graphics.fill((0, 0, 0))
 	stars = renderStarsky(stars)
 	if menu: renderMenu()
