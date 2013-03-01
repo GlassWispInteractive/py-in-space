@@ -57,6 +57,7 @@ def renderStarsky(stars):
 		#pygame.draw.circle(graphics, (60+z%190, 60+z%190, 60+z%190), (x, y), 3, 0)
 		starslib.draw_star(graphics, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=4, scale=1)
 
+
 	return stars
 
 offset = 0
@@ -65,6 +66,7 @@ trigger = None
 def renderShip():
 	''' Render battle ship. '''
 	graphics.blit(renderImg['player'], (418+offset, 440))
+	graphics.blit(renderImg['playershot'], (418+offset+29, 440-23))
 
 while True: # main game loop
 	eventList = pygame.event.get()
@@ -75,6 +77,9 @@ while True: # main game loop
 
 	# reduce events up to key strokes
 	eventList = filter(lambda e: e.type in [KEYDOWN,KEYUP] and e.key in KEYS, eventList)
+
+	if any(e.type == KEYDOWN and e.key == K_UP for e in eventList):
+		shoot = True
 
 	# iterate over events
 	for e in eventList:

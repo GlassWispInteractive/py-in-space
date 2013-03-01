@@ -7,7 +7,7 @@ import math
 
 def draw_star(surface, (x,y), color, kind=0, scale=1):
 	position = lambda (a,b): (int(a*scale+x), int(b*scale+y))
-	def darken((a,b,c),x): return (int(a/x), int(b/x), int(c/x))
+	def darken((a,b,c),x): return (a,b,c,300-x*60)
 
 	if kind == 0:
 		surface.set_at((x, y), color)
@@ -17,6 +17,9 @@ def draw_star(surface, (x,y), color, kind=0, scale=1):
 		pygame.draw.circle(surface, color, (x, y), r)
 
 	elif kind == 2:
+		alphasurface = surface.convert_alpha()
+		#pixObj = pygame.PixelArray(alphasurface)
+
 		"""handdrawn 'dot'"""
 
 		colors = dict()
@@ -26,17 +29,19 @@ def draw_star(surface, (x,y), color, kind=0, scale=1):
 		inner = [(2, 1), (1, 2), (2, 2), (3, 2), (2, 3)]
 		inner = map(position,inner)
 		for p in inner:
-			surface.set_at(p, colors[1])
+			alphasurface.set_at(p, colors[1])
 
 		middle = [(1,1),(3,1),(3,3),(1,3)]
 		middle = map(position,middle)
 		for p in middle:
-			surface.set_at(p, colors[2])
+			alphasurface.set_at(p, colors[2])
 
 		outer = [(2,0),(4,2),(2,4),(0,2)]
 		outer = map(position,outer)
 		for p in outer:
-			surface.set_at(p, colors[3])
+			alphasurface.set_at(p, colors[3])
+
+		surface.blit(alphasurface, (0,0))
 
 	elif kind == 3:
 		"""the real polygon thing"""
