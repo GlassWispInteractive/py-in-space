@@ -1,9 +1,36 @@
 # -*- coding: utf-8 *-*
-import pygame
-import sys
-from pygame.locals import *
-from random import randint
-import math
+import entity
+
+class starsky(entity):
+
+	def __init__(self, x, y, model):
+		entity.__init__(self, x, y, model)
+		# star 3tuple list
+		stars = [(randint(50, 850), randint(50, 450), 0) for i in range(randint(5, 10))]
+
+	def tick(self):
+		# create new stars
+		if tick % 100 == 0:
+			for i in range(randint(0, 25 - len(stars))):
+				stars.append((randint(50, 850), randint(-500, 0), 0))
+
+	def render(self, surface):
+		''' render astonishing star sky. '''
+
+		# update and delete stars
+		if tick % 3 == 0:
+			stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7) for x, y, z in stars if y < 500]
+		if tick % 100 == 0:
+			r = randint(0, len(stars) - 1)
+			if stars[r][2] == 0: stars[r] = (stars[r][0], stars[r][1], 1)
+
+		# render stars
+		for x, y, z in stars:
+			#pygame.draw.circle(surface, (60+z%190, 60+z%190, 60+z%190), (x, y), 3, 0)
+			draw_star(surface, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=4, scale=1)
+
+		return stars
+
 
 def draw_star(surface, (x,y), color, kind=0, scale=1):
 	position = lambda (a,b): (int(a*scale+x), int(b*scale+y))
