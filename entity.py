@@ -1,6 +1,7 @@
 # -*- coding: utf-8 *-*
 import pygame
-import pyinspacelib
+from pygame.locals import *
+from pyinspacelib import *
 
 class entity:
 
@@ -17,13 +18,13 @@ class entity:
 
 	Sprites = dict()
 	for e in SpriteImages:
-		Sprites[e] = pyinspacelib.getimageobject(e)
+		Sprites[e] = getimageobject(e)
 
 	def __init__(self, (x, y), model):
 		self.x = x if x in range(0,900) else 0
 		self.y = y if y in range(0,500) else 0
 		self.model = model if model in self.__class__.SpriteImages else "empty"
-		self.model = pyinspacelib.getimageobject(self.model)
+		self.model = getimageobject(self.model)
 		self.dead = False
 
 	def tick(self, entities, events=[]):

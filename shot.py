@@ -1,5 +1,6 @@
 # -*- coding: utf-8 *-*
 import pygame
+from pyinspacelib import *
 from entity import entity
 
 class shot(entity):

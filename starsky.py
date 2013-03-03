@@ -1,5 +1,7 @@
 # -*- coding: utf-8 *-*
 import pygame
+from pygame.locals import *
+from pyinspacelib import *
 from random import randint
 
 def init_starsky():
@@ -7,7 +9,7 @@ def init_starsky():
 	stars = [(randint(50, 850), randint(50, 450), 0) for i in range(randint(5, 10))]
 	return stars
 
-def update_starsky(paramstars, tick):
+def tick_starsky(paramstars, tick):
 
 	# clone list
 	stars = list(paramstars)
@@ -31,7 +33,8 @@ def render_starsky(surface, stars):
 	# render stars
 	for x, y, z in stars:
 		#pygame.draw.circle(surface, (60+z%190, 60+z%190, 60+z%190), (x, y), 3, 0)
-		draw_star(surface, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=4, scale=1)
+		draw_star(surface, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=1, scale=2)
+		#draw_star(surface, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=4, scale=1)
 
 
 def draw_star(surface, (x,y), color, kind=0, scale=1):
@@ -49,7 +52,7 @@ def draw_star(surface, (x,y), color, kind=0, scale=1):
 		alphasurface = surface.convert_alpha()
 		#pixObj = pygame.PixelArray(alphasurface)
 
-		"""handdrawn 'dot'"""
+		""" handdrawn 'dot' """
 
 		colors = dict()
 		for i in range(1,4):

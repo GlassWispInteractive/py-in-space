@@ -1,18 +1,35 @@
 # -*- coding: utf-8 *-*
 import pygame
+from pygame.locals import *
+from pyinspacelib import *
 
-def render_hud(surface, player):
+border = (4,4)
+offset = 90
+textborder = 20
+textcolor = (200,200,200)
+
+def render_hud(surface, hudfont, player):
 	''' Render Heads Up Display '''
-	header_surface = pygame.Surface((900,32))
 	header_sprites = dict()
 	for e in ['heart', 'shield', 'lightning', 'coin_stacks']:
-		header_sprites[e] = pygame.image.load('res/' + e + '.png')
-		header_sprites[e] = header_sprites[e].convert_alpha()
-	header_surface.blit(header_sprites['heart'], (0, 0))
-	header_surface.blit(header_sprites['shield'], (80, 0))
-	header_surface.blit(header_sprites['lightning'], (164, 0))
-	header_surface.blit(header_sprites['coin_stacks'], (860, 0))
+		header_sprites[e] = getimageobject(e)
+	surface.blit(header_sprites['heart'], (0+border[0], border[1]))
+	surface.blit(header_sprites['shield'], (offset+border[0], border[1]))
+	surface.blit(header_sprites['lightning'], (2*offset+border[0], border[1]))
+	surface.blit(header_sprites['coin_stacks'], (864, border[1]))
 
-	# TODO: 4 attribute als text rendern
+	label = hudfont.render(str(player.health), 1, textcolor)
+	labelPos = label.get_rect(left = 45, centery = textborder)
+	surface.blit(label, labelPos)
 
-	surface.blit(header_surface, (4,4))
+	label = hudfont.render(str(player.shield), 1, textcolor)
+	labelPos = label.get_rect(left = 135, centery = textborder)
+	surface.blit(label, labelPos)
+
+	label = hudfont.render(str(player.thunder), 1, textcolor)
+	labelPos = label.get_rect(left = 225, centery = textborder)
+	surface.blit(label, labelPos)
+
+	label = hudfont.render(str(player.score), 1, textcolor)
+	labelPos = label.get_rect(right = 855, centery = textborder)
+	surface.blit(label, labelPos)
