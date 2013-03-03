@@ -3,15 +3,17 @@ import pygame
 from pygame.locals import *
 from pyinspacelib import *
 from entity import entity
+from shot import shot
 
 class player(entity):
 
 	Dir = enum(Idle=0, Left=1, Right=2)
-	ShootCooldown = 60 # that way the player can shoot every 2 seconds
+	ShootCooldown = 15
 	MovementSpeed = 7
 
 	def __init__(self):
-		entity.__init__(self, (418, 440), "player")
+		self.sprite = "player"
+		entity.__init__(self, (418, 440), self.sprite)
 		self.health = 100
 		self.shield = 100
 		self.thunder = 0
@@ -24,7 +26,7 @@ class player(entity):
 		self.direction = player.Dir.Idle
 		self.shooting = False
 
-		self.cooldown = player.ShootCooldown
+		self.cooldown = 0
 
 	def tick(self, entities, events=[]):
 		# decrease shoot cooldown every frame by 1
@@ -35,15 +37,15 @@ class player(entity):
 		for e in filter(lambda e: e.key == K_SPACE, events):
 			if e.type == KEYUP:
 				events.remove(e) # that event is handled
-				shooting = False
+				self.shooting = False
 			if e.type == KEYDOWN:
 				events.remove(e) # that event is handled
-				shooting = True
+				self.shooting = True
 				if self.cooldown < 1:
-					spawnShot(entities)
+					self.spawnShot(entities)
 		# nothing was pressed but the key is being held down
 		if self.shooting and self.cooldown < 1:
-			spawnShot(entities)
+			self.spawnShot(entities)
 
 		# figure out designated direction
 		# last event per frame counts
@@ -61,8 +63,8 @@ class player(entity):
 			events.remove(e)
 
 		# events should be empty now
-		if len(events) != 0: print "UNHANDLED EVENTS IN PLAYER CLASS", events
-		print "l:", self.left, "r:", self.right, "lastdir:", self.lastdir, "direction:", self.direction
+		#if len(events) != 0: print "UNHANDLED EVENTS IN PLAYER CLASS", events
+		#print "l:", self.left, "r:", self.right, "lastdir:", self.lastdir, "direction:", self.direction
 
 		if self.left: self.direction = player.Dir.Left
 		if self.right: self.direction = player.Dir.Right
@@ -74,10 +76,11 @@ class player(entity):
 			self.offset -= player.MovementSpeed
 		elif self.offset < 55 * 7 and self.direction == player.Dir.Right:
 			self.offset += player.MovementSpeed
+		self.x = 418 + self.offset
 
 	def render(self, surface):
 		''' Render battle ship. '''
-		surface.blit(self.model, (418 + self.offset, 440))
+		surface.blit(self.model, (self.x, self.y))
 
 	def spawnShot(self, entities):
 		self.cooldown = player.ShootCooldown

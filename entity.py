@@ -20,11 +20,11 @@ class entity:
 	for e in SpriteImages:
 		Sprites[e] = getimageobject(e)
 
-	def __init__(self, (x, y), model):
+	def __init__(self, (x, y), sprite):
 		self.x = x if x in range(0,900) else 0
 		self.y = y if y in range(0,500) else 0
-		self.model = model if model in self.__class__.SpriteImages else "empty"
-		self.model = getimageobject(self.model)
+		self.sprite = sprite if sprite in entity.SpriteImages else "empty"
+		self.model = getimageobject(self.sprite)
 		self.dead = False
 
 	def tick(self, entities, events=[]):

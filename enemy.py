@@ -12,13 +12,13 @@ class enemy(entity):
 	def __init__(self, x, y, kind, health=100):
 		self.health = health
 		self.direction = enemy.Dir.Right # self.__class__.Dir.Right
-		sprite = "enemy" + str(kind)	# + randint(1, 4)
-		entity.__init__(self, (x, y), sprite)
+		self.sprite = "enemy" + str(kind)	# + randint(1, 4)
+		entity.__init__(self, (x, y), self.sprite)
 
 	def tick(self, entities, eventList):
 		pass
 
-	# inherited render method works fine
+	# inherited render and die methods work fine
 
 def populate(count):
 	enemies = list()

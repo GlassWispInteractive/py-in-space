@@ -24,7 +24,7 @@ hudfont = pygame.font.SysFont("monospace", 18)
 tick = 0
 
 # possible modes (menu, game, highscore?)
-Mode = enum(Menu=0, Highscore=1, Game=42, Paused=21, )
+Mode = enum(Menu=0, Highscore=1, Game=42, Paused=21)
 # start in the menu
 mode = Mode.Menu
 # init background
@@ -95,9 +95,11 @@ while True: # main game loop
 		render_menu(display, menufont)
 
 	if mode == Mode.Game:
-		render_hud(display, hudfont, theplayer)
 		theplayer.render(display)
-		for e in entities: e.render(display)
+		#for e in entities: e.render(display)
+		for e in filter(lambda e: isinstance(e,shot), entities): e.render(display)
+		for e in filter(lambda e: isinstance(e,enemy), entities): e.render(display)
+		render_hud(display, hudfont, theplayer)
 
 	pygame.display.update()
 

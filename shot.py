@@ -1,20 +1,44 @@
 # -*- coding: utf-8 *-*
 import pygame
 from pyinspacelib import *
+
 from entity import entity
+import player
+import enemy
 
 class shot(entity):
-	pass
+
+	ShotSpeed = 7
 
 	def __init__(self, orig):
+
 		self.origin = orig
+		orig_rect = self.origin.model.get_rect()
+
+		self.sprite = self.origin.sprite + "shot"
+		model = getimageobject(self.sprite)
+		model_rect = model.get_rect()
+
+		x = int(self.origin.x + orig_rect.width / 2 - model_rect.width/2 + 1)
+
+		y = self.origin.y
+		if isinstance(self.origin, player.player):
+			y -= orig_rect.height/2
+			y += model_rect.height/2
+		elif isinstance(self.origin, enemy.enemy):
+			y += orig_rect.height/2
+			y -= model_rect.height/2
+
+		entity.__init__(self, (x,y), self.sprite)
 
 	def tick(self, entities, eventList):
+		# fly up or down
+		if isinstance(self.origin, player.player):
+			self.y -= shot.ShotSpeed
+		elif isinstance(self.origin, enemy.enemy):
+			self.y += shot.ShotSpeed
 
-		if self.model[:-4] == "player":
-			self.y -= 7
-		elif self.model[:-4] == "enemy":
-			self.y += 7
+		# TODO: check for collision and call die methods of self and target
+		# also die when flying out of the screenq
 
-	def render(self, surface):
-		graphics.blit(self.models, (x, y))
+	# inherited render and die methods work fine
