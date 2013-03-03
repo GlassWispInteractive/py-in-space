@@ -62,13 +62,11 @@ class player(entity):
 
 		# events should be empty now
 		if len(events) != 0: print "UNHANDLED EVENTS IN PLAYER CLASS", events
-
-		# TO FIX: warum bewegt der sich weiter wenn man alle tasten loslaesst
-		# das hat doch mal funktioniert...
+		print "l:", self.left, "r:", self.right, "lastdir:", self.lastdir, "direction:", self.direction
 
 		if self.left: self.direction = player.Dir.Left
 		if self.right: self.direction = player.Dir.Right
-
+		if not self.left and not self.right : self.direction = player.Dir.Idle
 		if self.left and self.lastdir == K_LEFT: self.direction = player.Dir.Left
 		if self.right and self.lastdir == K_RIGHT: self.direction = player.Dir.Right
 
