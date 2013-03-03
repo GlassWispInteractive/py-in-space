@@ -1,24 +1,31 @@
 # -*- coding: utf-8 *-*
-import entity
-import enum
+import pygame
+from entity import entity
+from enum import enum
+import pyinspacelib
+from random import randint
 
 class enemy(entity):
 
-	Dir = enum(Left=1, Right=2)
+	Dir = enum(Idle=0, Left=1, Right=2)
+	#EnemyType = enum(1=1, 2=2, 3=3, 4=4)
 
-	def __init__(self, x, y, model, health=100, dir=enemy.Dir.Right):
-		entity.__init__(self, x, y, model)
+	def __init__(self, x, y, kind, health=100):
 		self.health = health
+		self.direction = enemy.Dir.Right # self.__class__.Dir.Right
+		sprite = "enemy" + str(kind)	# + randint(1, 4)
+		entity.__init__(self, (x, y), sprite)
 
-	def tick(self):
+	def tick(self, entities, eventList):
 		pass
 
 	def render(self, surface):
-		pass
+		surface.blit(self.model, (self.x, self.y))
 
-	def __eq__(self, other):
-		return True if self.x == other.x
-			and self.y == other.y
-			and self.model == other.model
-			and self.health == other.health
-		else False
+def populate(count):
+	enemies = list()
+	border = (30,20) # (x,y)
+	offset = (10,10) # (x,y)
+	for i in range(1,count):
+		enemies.append(enemy((i%offset[0]+border[0]), (i*offset[1]+border[1]), i%4+1))
+	return enemies

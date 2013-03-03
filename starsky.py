@@ -1,35 +1,37 @@
 # -*- coding: utf-8 *-*
-import entity
+import pygame
+from random import randint
 
-class starsky(entity):
+def init_starsky():
+	# star 3tuple list
+	stars = [(randint(50, 850), randint(50, 450), 0) for i in range(randint(5, 10))]
+	return stars
 
-	def __init__(self, x, y, model):
-		entity.__init__(self, x, y, model)
-		# star 3tuple list
-		stars = [(randint(50, 850), randint(50, 450), 0) for i in range(randint(5, 10))]
+def update_starsky(paramstars, tick):
 
-	def tick(self):
-		# create new stars
-		if tick % 100 == 0:
-			for i in range(randint(0, 25 - len(stars))):
-				stars.append((randint(50, 850), randint(-500, 0), 0))
+	# clone list
+	stars = list(paramstars)
 
-	def render(self, surface):
-		''' render astonishing star sky. '''
+	# create new stars
+	if tick % 100 == 0:
+		for i in range(randint(0, 25 - len(stars))):
+			stars.append((randint(22, 882), randint(-500, 0), 0))
 
-		# update and delete stars
-		if tick % 3 == 0:
-			stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7) for x, y, z in stars if y < 500]
-		if tick % 100 == 0:
-			r = randint(0, len(stars) - 1)
-			if stars[r][2] == 0: stars[r] = (stars[r][0], stars[r][1], 1)
+	# update and delete stars
+	if tick % 3 == 0:
+		stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7) for x, y, z in stars if y < 500]
+	if tick % 100 == 0:
+		r = randint(0, len(stars) - 1)
+		if stars[r][2] == 0: stars[r] = (stars[r][0], stars[r][1], 1)
 
-		# render stars
-		for x, y, z in stars:
-			#pygame.draw.circle(surface, (60+z%190, 60+z%190, 60+z%190), (x, y), 3, 0)
-			draw_star(surface, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=4, scale=1)
+	return stars
 
-		return stars
+def render_starsky(surface, stars):
+	''' render astonishing star sky. '''
+	# render stars
+	for x, y, z in stars:
+		#pygame.draw.circle(surface, (60+z%190, 60+z%190, 60+z%190), (x, y), 3, 0)
+		draw_star(surface, (x,y), (60+z%190, 60+z%190, 60+z%190), kind=4, scale=1)
 
 
 def draw_star(surface, (x,y), color, kind=0, scale=1):
@@ -40,7 +42,7 @@ def draw_star(surface, (x,y), color, kind=0, scale=1):
 		surface.set_at((x, y), color)
 
 	elif kind == 1:
-		r = randint(1,4)
+		r = scale
 		pygame.draw.circle(surface, color, (x, y), r)
 
 	elif kind == 2:
