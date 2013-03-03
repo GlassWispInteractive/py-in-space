@@ -77,8 +77,8 @@ while True: # main game loop
 			mode = Mode.Menu
 			continue
 
-		theplayer.tick(entities, filter(lambda e: e.key in MOVEMENT_KEYS, eventList))
-		for e in entities: e.tick(entities, eventList)
+		theplayer.tick(tick, entities, filter(lambda e: e.key in MOVEMENT_KEYS, eventList))
+		for e in entities: e.tick(tick, entities, eventList)
 
 		# only retain living entities
 		entities = filter(lambda e: e.dead == False, entities)

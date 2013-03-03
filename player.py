@@ -28,7 +28,7 @@ class player(entity):
 
 		self.cooldown = 0
 
-	def tick(self, entities, events=[]):
+	def tick(self, tick, entities, events):
 		# decrease shoot cooldown every frame by 1
 		# that way you can shoot every full second
 		self.cooldown = self.cooldown-1 if self.cooldown>0 else 0

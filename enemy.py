@@ -15,7 +15,7 @@ class enemy(entity):
 		self.sprite = "enemy" + str(kind)	# + randint(1, 4)
 		entity.__init__(self, (x, y), self.sprite)
 
-	def tick(self, entities, eventList):
+	def tick(self, tick, entities, events):
 		pass
 
 	# inherited render and die methods work fine

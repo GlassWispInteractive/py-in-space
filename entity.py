@@ -27,7 +27,7 @@ class entity:
 		self.model = getimageobject(self.sprite)
 		self.dead = False
 
-	def tick(self, entities, events=[]):
+	def tick(self, tick, entities, events):
 		pass
 
 	def render(self, surface):

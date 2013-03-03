@@ -31,7 +31,7 @@ class shot(entity):
 
 		entity.__init__(self, (x,y), self.sprite)
 
-	def tick(self, entities, eventList):
+	def tick(self, tick, entities, events):
 		# fly up or down
 		if isinstance(self.origin, player.player):
 			self.y -= shot.ShotSpeed
