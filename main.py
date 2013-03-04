@@ -55,11 +55,9 @@ while True: # main game loop
 
 	if len(eventList) != 0: print eventList
 
-
 	############
 	### TICK ###
 	############
-
 	stars = tick_starsky(stars, tick)
 
 	# enter the game
@@ -86,7 +84,6 @@ while True: # main game loop
 		# only retain living entities
 		entities = filter(lambda e: e.dead == False, entities)
 
-
 	##############
 	### RENDER ###
 	##############
@@ -106,15 +103,12 @@ while True: # main game loop
 
 	pygame.display.update()
 
-
 	############
 	### WAIT ###
 	############
 	tick = tick % 3000 + 1
-	# avoid overflow
-	# calculations in starsky are done with %3 and %100 of the tick
+	# avoid overflow, calculations in starsky are done with %3 and %100 of the tick
 	fpsClock.tick(FPS)
-	#print tick
 
 
 # tidy up and quit

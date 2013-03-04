@@ -13,9 +13,6 @@ class entity:
 		self.model = getimageobject(self.sprite)
 		self.dead = False
 
-	def tick(self, tick, entities, events):
-		pass
-
 	def render(self, surface):
 		surface.blit(self.model, (self.x, self.y))
 
