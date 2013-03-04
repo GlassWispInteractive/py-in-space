@@ -18,10 +18,11 @@ from shot import shot
 pygame.init()
 pygame.display.set_caption('PyInSpace!')
 display = pygame.display.set_mode((900, 500))
-fpsClock = pygame.time.Clock()
 menufont = pygame.font.SysFont("monospace", 28)
-hudfont = pygame.font.SysFont("monospace", 18)
+hudfont = pygame.font.Font("res/ubuntu_mono.ttf", 20)
+fpsClock = pygame.time.Clock()
 tick = 0
+FPS = 30
 
 # possible modes (menu, game, highscore?)
 Mode = enum(Menu=0, Highscore=1, Game=42, Paused=21)
@@ -107,10 +108,10 @@ while True: # main game loop
 	############
 	### WAIT ###
 	############
-	tick = (tick + 1) % 3000
+	tick = tick % 3000 + 1
 	# avoid overflow
 	# calculations in starsky are done with %3 and %100 of the tick
-	fpsClock.tick(30)
+	fpsClock.tick(FPS)
 	#print tick
 
 

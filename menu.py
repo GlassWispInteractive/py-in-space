@@ -11,6 +11,6 @@ def render_menu(surface, textfont):
 	pygame.draw.rect(surface, (80, 80, 80), (255, 305, 390, 50))
 
 	# label
-	label = textfont.render("Start game!", 1, (200,200,200))
+	label = textfont.render("Press ENTER to start", 1, (200,200,200))
 	labelPos = label.get_rect(centerx = 450, centery = 330)
 	surface.blit(label, labelPos)

@@ -31,12 +31,18 @@ class shot(entity):
 
 		entity.__init__(self, (x,y), self.sprite)
 
+		print orig.sprite, "fired a shot at", x, y
+
 	def tick(self, tick, entities, events):
 		# fly up or down
 		if isinstance(self.origin, player.player):
 			self.y -= shot.ShotSpeed
+			if self.y < -100:
+				self.die()
 		elif isinstance(self.origin, enemy.enemy):
 			self.y += shot.ShotSpeed
+			if self.y > 600:
+				self.die()
 
 		# TODO: check for collision and call die methods of self and target
 		# also die when flying out of the screenq

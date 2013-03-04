@@ -8,7 +8,7 @@ from shot import shot
 class player(entity):
 
 	Dir = enum(Idle=0, Left=1, Right=2)
-	ShootCooldown = 15
+	ShootCooldown = 15 # player can shoot every half second
 	MovementSpeed = 7
 
 	def __init__(self):
@@ -60,15 +60,13 @@ class player(entity):
 			if e.type == KEYDOWN and e.key == K_RIGHT:
 				self.right = True
 				self.lastdir = K_RIGHT
-			events.remove(e)
 
-		# events should be empty now
-		#if len(events) != 0: print "UNHANDLED EVENTS IN PLAYER CLASS", events
+		# debug
 		#print "l:", self.left, "r:", self.right, "lastdir:", self.lastdir, "direction:", self.direction
 
+		if not self.left and not self.right : self.direction = player.Dir.Idle
 		if self.left: self.direction = player.Dir.Left
 		if self.right: self.direction = player.Dir.Right
-		if not self.left and not self.right : self.direction = player.Dir.Idle
 		if self.left and self.lastdir == K_LEFT: self.direction = player.Dir.Left
 		if self.right and self.lastdir == K_RIGHT: self.direction = player.Dir.Right
 
