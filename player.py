@@ -7,7 +7,6 @@ from shot import shot
 
 class player(entity):
 
-	Dir = enum(Idle=0, Left=1, Right=2)
 	ShootCooldown = 15 # player can shoot every half second
 	MovementSpeed = 7
 
@@ -23,63 +22,47 @@ class player(entity):
 		self.left = False
 		self.right = False
 		self.lastdir = None
-		self.direction = player.Dir.Idle
+		self.direction = entity.Dir.Idle
 		self.shooting = False
-
 		self.cooldown = 0
 
 	def tick(self, tick, entities, events):
 		# decrease shoot cooldown every frame by 1
 		# that way you can shoot every full second
-		self.cooldown = self.cooldown-1 if self.cooldown>0 else 0
+		self.cooldown = self.cooldown - 1 if self.cooldown > 0 else 0
 
 		# figure out wheter to fire
 		for e in filter(lambda e: e.key == K_SPACE, events):
 			if e.type == KEYUP:
-				events.remove(e) # that event is handled
 				self.shooting = False
 			if e.type == KEYDOWN:
-				events.remove(e) # that event is handled
 				self.shooting = True
-				if self.cooldown < 1:
-					self.spawnShot(entities)
+				self.spawnShot(entities)
 		# nothing was pressed but the key is being held down
-		if self.shooting and self.cooldown < 1:
+		if self.shooting:
 			self.spawnShot(entities)
 
 		# figure out designated direction
-		# last event per frame counts
 		for e in events:
-			if e.type == KEYUP and e.key == K_LEFT:
-				self.left = False
-			if e.type == KEYUP and e.key == K_RIGHT:
-				self.right = False
-			if e.type == KEYDOWN and e.key == K_LEFT:
-				self.left = True
-				self.lastdir = K_LEFT
-			if e.type == KEYDOWN and e.key == K_RIGHT:
-				self.right = True
-				self.lastdir = K_RIGHT
+			if e.key == K_LEFT: self.left = isDownPress(e)
+			if e.key == K_RIGHT: self.right = isDownPress(e)
+			if isDownPress(e): self.lastdir = e.key
 
-		# debug
 		#print "l:", self.left, "r:", self.right, "lastdir:", self.lastdir, "direction:", self.direction
 
-		if not self.left and not self.right : self.direction = player.Dir.Idle
-		if self.left: self.direction = player.Dir.Left
-		if self.right: self.direction = player.Dir.Right
-		if self.left and self.lastdir == K_LEFT: self.direction = player.Dir.Left
-		if self.right and self.lastdir == K_RIGHT: self.direction = player.Dir.Right
+		if not self.left and not self.right : self.direction = entity.Dir.Idle
+		if self.left: self.direction = entity.Dir.Left
+		if self.right: self.direction = entity.Dir.Right
+		if self.left and self.lastdir == K_LEFT: self.direction = entity.Dir.Left
+		if self.right and self.lastdir == K_RIGHT: self.direction = entity.Dir.Right
 
-		if self.offset > -55 * 7 and self.direction == player.Dir.Left:
+		if self.offset > -56 * 7 and self.direction == entity.Dir.Left:
 			self.offset -= player.MovementSpeed
-		elif self.offset < 55 * 7 and self.direction == player.Dir.Right:
+		elif self.offset < 56 * 7 and self.direction == entity.Dir.Right:
 			self.offset += player.MovementSpeed
 		self.x = 418 + self.offset
 
-	def render(self, surface):
-		''' Render battle ship. '''
-		surface.blit(self.model, (self.x, self.y))
-
 	def spawnShot(self, entities):
-		self.cooldown = player.ShootCooldown
-		entities.append(shot(self))
+		if self.cooldown < 1:
+			self.cooldown = player.ShootCooldown
+			entities.append(shot(self))

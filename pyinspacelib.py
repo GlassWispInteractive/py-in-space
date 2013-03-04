@@ -1,8 +1,9 @@
 # -*- coding: utf-8 *-*
 
-""" No game logic here, just helper functions"""
+# No game logic here, just helper functions
 
 import pygame
+from pygame.locals import *
 
 def getimagepath(img):
 	return 'res/' + str(img) + '.png'
@@ -12,6 +13,9 @@ def getimageobject(img):
 		return pygame.image.load(img)
 	else:
 		return pygame.image.load(getimagepath(img))
+
+def isDownPress(e):
+	return True if e.type == KEYDOWN else False if e.type == KEYUP else None
 
 def enum(**enums):
 	return type('Enum', (), enums)

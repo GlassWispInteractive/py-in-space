@@ -6,19 +6,14 @@ from random import randint
 
 class enemy(entity):
 
-	Dir = enum(Idle=0, Left=1, Right=2)
-	#EnemyType = enum(1=1, 2=2, 3=3, 4=4)
-
-	def __init__(self, x, y, kind, health=100):
-		self.health = health
-		self.direction = enemy.Dir.Right # self.__class__.Dir.Right
-		self.sprite = "enemy" + str(kind)	# + randint(1, 4)
+	def __init__(self, x, y, type):
+		self.sprite = "enemy" + str(type)
 		entity.__init__(self, (x, y), self.sprite)
+		self.direction = entity.Dir.Right
 
 	def tick(self, tick, entities, events):
 		pass
-
-	# inherited render and die methods work fine
+		# TODO: move and fire
 
 def populate(count):
 	enemies = list()

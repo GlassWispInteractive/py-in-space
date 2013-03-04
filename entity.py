@@ -4,26 +4,12 @@ from pygame.locals import *
 from pyinspacelib import *
 
 class entity:
-
-	SpriteImages = [
-			"empty", "logo",
-			"player", "playershot",
-			"enemy1", "enemy2", "enemy3", "enemy4",
-			"enemy1shot", "enemy2shot", "enemy3shot", "enemy4shot",
-			"coin_bronze", "coin_gold", "coin_silver", "coin_stack", "coin_stacks",
-			"award_bronze", "award_gold", "award_silver",
-			"heart", "shield", "lightning",
-			"fire", "diamond", "ruby"
-			]
-
-	Sprites = dict()
-	for e in SpriteImages:
-		Sprites[e] = getimageobject(e)
+	Dir = enum(Idle=0, Left=1, Down=2, Up=3, Right=4)
 
 	def __init__(self, (x, y), sprite):
-		self.x = x if x in range(0,900) else 0
-		self.y = y if y in range(0,500) else 0
-		self.sprite = sprite if sprite in entity.SpriteImages else "empty"
+		self.x = x
+		self.y = y
+		self.sprite = sprite
 		self.model = getimageobject(self.sprite)
 		self.dead = False
 

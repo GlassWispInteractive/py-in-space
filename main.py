@@ -46,12 +46,12 @@ while True: # main game loop
 	eventList = pygame.event.get()
 
 	# check for quit event
-	if any(e.type == QUIT or (e.type == KEYDOWN and e.key == K_q) for e in eventList):
+	if any(e.type == QUIT or (isDownPress(e) and e.key == K_q) for e in eventList):
 		break
 
 	# reduce events up to key strokes
 	eventList = filter(lambda e: e.type in [KEYDOWN,KEYUP] and e.key in KEYS, eventList)
-	#keyDownEvents = filter(lambda e: e.type == KEYDOWN, eventList)
+	#keyDownEvents = filter(lambda e: isDownPress(e), eventList)
 
 	if len(eventList) != 0: print eventList
 
@@ -63,17 +63,19 @@ while True: # main game loop
 	stars = tick_starsky(stars, tick)
 
 	# enter the game
-	if mode == Mode.Menu and any((e.type == KEYDOWN and e.key == K_RETURN) for e in eventList):
+	if mode == Mode.Menu and any(isDownPress(e) and e.key == K_RETURN for e in eventList):
 		mode = Mode.Game
 		theplayer = player() # the one and only
-		entities = list() # only contains enemies and shots
+		entities = list()	# contains the player and all enemies and shots
+							# but we maintain a reference to theplayer
+		entities.append(theplayer)
 		entities.extend(populate(10))
 		continue
 
 	if mode == Mode.Game:
 		# switch to menu
-		if any((e.type == KEYDOWN and e.key == K_ESCAPE) for e in eventList):
-			del theplayer
+		if any(isDownPress(e) and e.key == K_ESCAPE for e in eventList):
+#			del theplayer
 			del entities
 			mode = Mode.Menu
 			continue
