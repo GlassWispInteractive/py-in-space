@@ -69,3 +69,4 @@ def draw_star(surface, (x,y), color, kind=0, scale=1):
 		quadrat = [(3,3),(17,3),(17,17),(3,17)]
 		quadrat = list(map(position,quadrat))
 		pygame.draw.polygon(surface, color, quadrat)
+

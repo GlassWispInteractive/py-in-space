@@ -11,3 +11,4 @@ def render_menu(surface, textfont):
 	label = textfont.render("Press ENTER to start", 1, (200,200,200))
 	label_pos = label.get_rect(centerx = 450, centery = 330)
 	surface.blit(label, label_pos)
+

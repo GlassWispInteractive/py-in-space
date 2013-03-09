@@ -28,3 +28,4 @@ def render_hud(surface, hudfont, player, textPadding=20, textColor=(200,200,200)
 	label = hudfont.render(str(player.score), 1, textColor)
 	label_pos = label.get_rect(right = 9.5*90, centery = textPadding)
 	surface.blit(label, label_pos)
+

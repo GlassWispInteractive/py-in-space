@@ -29,12 +29,11 @@ nosetests.xml
 # Translations
 *.mo
 
-# Mr Developer
+# Dev
 .mr.developer.cfg
 .project
 .pydevproject
+.settings
+*.nja
+*.geany
 
-# ninja
-py-in-space.nja
-
-py-in-space.geany

@@ -66,3 +66,4 @@ class player(entity):
 		if self.cooldown < 1:
 			self.cooldown = player.ShootCooldown
 			entities.append(shot(self))
+

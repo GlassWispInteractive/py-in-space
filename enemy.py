@@ -22,3 +22,4 @@ def populate(count):
 	for i in range(1,count):
 		enemies.append(enemy((i*offset[0]+border[0]), (i+border[1]), i%3+1))
 	return enemies
+

@@ -18,3 +18,4 @@ class entity:
 
 	def die(self):
 		self.dead = True
+

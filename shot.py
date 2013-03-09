@@ -45,3 +45,5 @@ class shot(entity):
 			self.die() # out of screen
 
 		# TODO: check for collision and call die methods of self and target
+		# Rect.colliderect(Rect): return bool
+
