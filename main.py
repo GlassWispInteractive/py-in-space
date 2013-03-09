@@ -1,11 +1,10 @@
 # -*- coding: utf-8 *-*
 import sys
-
 import pygame
 from pygame.locals import *
 from random import randint
 
-from entities import entity, player, enemy, populate, shot
+from entities import Entity, Player, Enemy, Shot
 from pyinspacelib import *
 
 # init pygame
@@ -30,17 +29,13 @@ MOVEMENT_KEYS = [K_LEFT, K_RIGHT, K_SPACE]
 CONTROL_KEYS = [K_RETURN, K_ESCAPE, K_p]
 KEYS = MOVEMENT_KEYS + CONTROL_KEYS
 
-
-
 def render_menu(surface, textfont):
 	surface.blit(getimageobject('logo'), (157, 100))
 	pygame.draw.rect(surface, (192, 192, 192), (250, 300, 400, 60))
 	pygame.draw.rect(surface, (80, 80, 80), (255, 305, 390, 50))
-
 	label = textfont.render("Press ENTER to start", 1, (200,200,200))
 	label_pos = label.get_rect(centerx = 450, centery = 330)
 	surface.blit(label, label_pos)
-
 
 def render_hud(surface, hudfont, player, textPadding=20, textColor=(200,200,200), iconPadding=4):
 	''' Render Heads Up Display '''
@@ -51,23 +46,18 @@ def render_hud(surface, hudfont, player, textPadding=20, textColor=(200,200,200)
 	surface.blit(header_sprites['shield'], (1*90+iconPadding, iconPadding))
 	surface.blit(header_sprites['lightning'], (2*90+iconPadding, iconPadding))
 	surface.blit(header_sprites['coin_stacks'], (864, iconPadding))
-
 	label = hudfont.render(str(player.health), 1, textColor)
 	label_pos = label.get_rect(left = 0.5*90, centery = textPadding)
 	surface.blit(label, label_pos)
-
 	label = hudfont.render(str(player.shield), 1, textColor)
 	label_pos = label.get_rect(left = 1.5*90, centery = textPadding)
 	surface.blit(label, label_pos)
-
 	label = hudfont.render(str(player.thunder), 1, textColor)
 	label_pos = label.get_rect(left = 2.5*90, centery = textPadding)
 	surface.blit(label, label_pos)
-
 	label = hudfont.render(str(player.score), 1, textColor)
 	label_pos = label.get_rect(right = 9.5*90, centery = textPadding)
 	surface.blit(label, label_pos)
-
 
 def tick_starsky(stars, tick):
 	# create new stars
@@ -90,13 +80,9 @@ def render_starsky(stars):
 		pygame.draw.circle(display, (60+z%190, 60+z%190, 60+z%190), (x, y), 2)
 
 
-
 while True: # main game loop
 
-	##############
-	### EVENTS ###
-	##############
-	# get events
+	# EVENTS
 	eventList = pygame.event.get()
 
 	# check for quit event
@@ -109,18 +95,16 @@ while True: # main game loop
 
 	if len(eventList) != 0: print eventList
 
-	############
-	### TICK ###
-	############
+	# TICK
 	stars = tick_starsky(stars, tick)
 
-	# enter the game
 	if mode == Mode.Menu and any(isDownPress(e) and e.key == K_RETURN for e in eventList):
+		# enter the game
 		mode = Mode.Game
-		theplayer = player() # the one and only
+		theplayer = Player() # the one and only
 		entities = list()			# contains the player and all enemies and shots
 		entities.append(theplayer)	# but we maintain a reference to theplayer
-		entities.extend(populate(10))
+		entities.extend(Enemy.populate(10))
 		continue
 
 	if mode == Mode.Game:
@@ -136,11 +120,8 @@ while True: # main game loop
 		# only retain living entities
 		entities = [e for e in entities if e.dead == False]
 
-	##############
-	### RENDER ###
-	##############
+	# RENDER
 	display.fill((0, 0, 0))
-
 	render_starsky(stars)
 
 	if mode == Mode.Menu:
@@ -149,21 +130,17 @@ while True: # main game loop
 	if mode == Mode.Game:
 		theplayer.render(display)
 		#for e in entities: e.render(display)
-		for e in [e for e in entities if isinstance(e,shot)]: e.render(display)
-		for e in [e for e in entities if isinstance(e,enemy)]: e.render(display)
+		for e in [e for e in entities if isinstance(e, Shot)]: e.render(display)
+		for e in [e for e in entities if isinstance(e, Enemy)]: e.render(display)
 		render_hud(display, hudfont, theplayer)
 
 	pygame.display.update()
 
-	############
-	### WAIT ###
-	############
+	# WAIT
 	tick = tick % 3000 + 1
 	# avoid overflow, calculations in starsky are done with %3 and %100 of the tick
 	fpsClock.tick(FPS)
 
-
 # tidy up and quit
 pygame.quit()
 sys.exit()
-
