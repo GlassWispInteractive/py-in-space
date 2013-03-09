@@ -1,9 +1,9 @@
 # -*- coding: utf-8 *-*
 
-# No game logic here, just helper functions
-
 import pygame
 from pygame.locals import *
+
+# No game logic here, just helper functions
 
 def getimagepath(img):
 	return 'res/' + str(img) + '.png'
