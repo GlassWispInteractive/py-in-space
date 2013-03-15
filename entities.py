@@ -17,6 +17,11 @@ class Entity:
 	def render(self, surface):
 		surface.blit(self.model, (self.x, self.y))
 
+	def get_rect(self):
+		rect = self.model.get_rect()
+		rect.topleft = (self.x, self.y)
+		return rect
+
 	def die(self):
 		self.dead = True
 
@@ -25,8 +30,7 @@ class Player(Entity):
 	MovementSpeed = 7
 
 	def __init__(self):
-		self.sprite = "player"
-		Entity.__init__(self, (418, 440), self.sprite)
+		Entity.__init__(self, (418, 440), "player")
 		self.health = 100
 		self.shield = 100
 		self.thunder = 0
@@ -138,3 +142,15 @@ class Shot(Entity):
 
 		# TODO: check for collision and call die methods of self and target
 		# Use this: Rect.colliderect(Rect): return bool - test if two rectangles overlap
+
+		enemies = [e for e in entities if isinstance(e, Enemy)]
+		shots = [s for s in entities if isinstance(s, Shot)]
+
+		for enemy in enemies:
+			enemy_rect = enemy.get_rect()
+			for shot in shots:
+				shot_rect = shot.get_rect()
+				if enemy_rect.colliderect(shot_rect):
+					enemy.die()
+					shot.die()
+					print "enemy killed"

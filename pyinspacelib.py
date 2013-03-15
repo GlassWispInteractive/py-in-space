@@ -2,7 +2,7 @@
 import pygame
 
 def getimageobject(img):
-	if img[-4:] == ".png":
+	if img.endswith('.png'):
 		return pygame.image.load(img)
 	else:
 		return pygame.image.load('res/' + str(img) + '.png')
