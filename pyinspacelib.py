@@ -8,7 +8,5 @@ def getimageobject(img):
 		return pygame.image.load('res/' + str(img) + '.png')
 
 def isDownPress(e):
-	return True if e.type == pygame.KEYDOWN else False if e.type == pygame.KEYUP else None
+	return e.type == pygame.KEYDOWN
 
-def enum(**enums):
-	return type('Enum', (), enums)
