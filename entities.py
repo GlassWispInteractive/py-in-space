@@ -5,7 +5,7 @@ from pyinspacelib import *
 from random import randint
 
 class Entity:
-	Dir = enum(Idle=0, Left=1, Down=2, Up=3, Right=4)
+	idle, left, down, up, right = range(5)
 
 	def __init__(self, (x, y), sprite):
 		self.x = x
@@ -40,7 +40,7 @@ class Player(Entity):
 		self.left = False
 		self.right = False
 		self.lastdir = None
-		self.direction = Entity.Dir.Idle
+		self.direction = Entity.idle
 		self.shooting = False
 		self.cooldown = 0
 
@@ -66,15 +66,15 @@ class Player(Entity):
 			if e.key == K_RIGHT: self.right = isDownPress(e)
 			if isDownPress(e): self.lastdir = e.key
 
-		if not self.left and not self.right: self.direction = Entity.Dir.Idle
-		if self.left: self.direction = Entity.Dir.Left
-		if self.right: self.direction = Entity.Dir.Right
-		if self.left and self.lastdir == K_LEFT: self.direction = Entity.Dir.Left
-		if self.right and self.lastdir == K_RIGHT: self.direction = Entity.Dir.Right
+		if not self.left and not self.right: self.direction = Entity.idle
+		if self.left: self.direction = Entity.left
+		if self.right: self.direction = Entity.right
+		if self.left and self.lastdir == K_LEFT: self.direction = Entity.left
+		if self.right and self.lastdir == K_RIGHT: self.direction = Entity.right
 
-		if self.offset > -56 * 7 and self.direction == Entity.Dir.Left:
+		if self.offset > -56 * 7 and self.direction == Entity.left:
 			self.offset -= Player.MovementSpeed
-		elif self.offset < 56 * 7 and self.direction == Entity.Dir.Right:
+		elif self.offset < 56 * 7 and self.direction == Entity.right:
 			self.offset += Player.MovementSpeed
 		self.x = 418 + self.offset
 
@@ -87,7 +87,7 @@ class Enemy(Entity):
 	def __init__(self, x, y, type):
 		self.sprite = "enemy" + str(type)
 		Entity.__init__(self, (x, y), self.sprite)
-		self.direction = Entity.Dir.Right
+		self.direction = Entity.right
 
 	def tick(self, tick, entities, events):
 		pass
@@ -121,10 +121,10 @@ class Shot(Entity):
 		y = self.origin.y
 		if isinstance(self.origin, Player):
 			y = y - orig_rect.height / 2 + model_rect.height / 2
-			self.direction = Entity.Dir.Up
+			self.direction = Entity.up
 		elif isinstance(self.origin, Enemy):
 			y = y + orig_rect.height / 2 - model_rect.height / 2
-			self.direction = Entity.Dir.Down
+			self.direction = Entity.down
 
 		Entity.__init__(self, (x,y), self.sprite)
 
@@ -133,9 +133,9 @@ class Shot(Entity):
 
 	def tick(self, tick, entities, events):
 		# fly up or down
-		if self.direction == Entity.Dir.Up:
+		if self.direction == Entity.up:
 			self.y -= Shot.PlayerShotSpeed
-		elif self.direction == Entity.Dir.Down:
+		elif self.direction == Entity.down:
 			self.y += Shot.PlayerShotSpeed
 
 		if self.x < -100 or self.x > 1000 or self.y < -100 or self.y > 600:

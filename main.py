@@ -20,9 +20,11 @@ tick = 0
 FPS = 30
 
 # possible modes (menu, game, highscore?)
-Mode = enum(Menu=1, Highscore=2, Game=3, Paused=4)
+modeMenu, modeHighscore, modeGame, modePaused = range(4)
+
 # start in the menu
-mode = Mode.Menu
+mode = modeMenu
+
 # init background
 stars = [(randint(50, 850), randint(50, 450), 0) for i in range(randint(5, 10))]
 
@@ -101,20 +103,20 @@ while True: # main game loop
 	# TICK
 	stars = tick_starsky(stars, tick)
 
-	if mode == Mode.Menu and any(isDownPress(e) and e.key == K_RETURN for e in eventList):
+	if mode == modeMenu and any(isDownPress(e) and e.key == K_RETURN for e in eventList):
 		# enter the game
-		mode = Mode.Game
+		mode = modeGame
 		theplayer = Player() # the one and only
 		entities = list()			# contains the player and all enemies and shots
 		entities.append(theplayer)	# but we maintain a reference to theplayer
 		entities.extend(Enemy.populate(10))
 		continue
 
-	if mode == Mode.Game:
+	if mode == modeGame:
 		# switch to menu
 		if any(isDownPress(e) and e.key == K_ESCAPE for e in eventList):
 			del entities
-			mode = Mode.Menu
+			mode = modeMenu
 			continue
 
 		theplayer.tick(tick, entities, [e for e in eventList if e.key in MOVEMENT_KEYS])
@@ -127,10 +129,10 @@ while True: # main game loop
 	display.fill((0, 0, 0))
 	render_starsky(stars)
 
-	if mode == Mode.Menu:
+	if mode == modeMenu:
 		render_menu(display, menufont)
 
-	if mode == Mode.Game:
+	if mode == modeGame:
 		theplayer.render(display)
 		#for e in entities: e.render(display)
 		for e in [e for e in entities if isinstance(e, Shot)]: e.render(display)
@@ -147,3 +149,4 @@ while True: # main game loop
 # tidy up and quit
 pygame.quit()
 sys.exit()
+

@@ -11,7 +11,5 @@ def getogg(snd):
 	return pygame.mixer.Sound('res/' + str(snd) + '.ogg')
 
 def isDownPress(e):
-	return True if e.type == pygame.KEYDOWN else False if e.type == pygame.KEYUP else None
+	return e.type == pygame.KEYDOWN
 
-def enum(**enums):
-	return type('Enum', (), enums)
