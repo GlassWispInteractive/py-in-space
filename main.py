@@ -13,6 +13,8 @@ pygame.display.set_caption('PyInSpace!')
 display = pygame.display.set_mode((900, 500))
 menufont = pygame.font.SysFont("monospace", 28)
 hudfont = pygame.font.Font("res/ubuntu_mono.ttf", 20)
+pygame.mixer.music.load("res/JustInSpace-Galaxy.ogg")
+pygame.mixer.music.play()
 fpsClock = pygame.time.Clock()
 tick = 0
 FPS = 30
@@ -39,7 +41,8 @@ def render_menu(surface, textfont):
 	label_pos = label.get_rect(centerx = 450, centery = 330)
 	surface.blit(label, label_pos)
 
-def render_hud(surface, hudfont, player, textPadding=20, textColor=(200,200,200), iconPadding=4):
+def render_hud(surface, hudfont, player, textPadding=20,
+				textColor=(200,200,200), iconPadding=4):
 	''' Render Heads Up Display '''
 	header_sprites = dict()
 	for e in ['heart', 'shield', 'lightning', 'coin_stacks']:

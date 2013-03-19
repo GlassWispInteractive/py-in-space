@@ -5,7 +5,10 @@ def getimageobject(img):
 	if img.endswith('.png'):
 		return pygame.image.load(img)
 	else:
-		return pygame.image.load('res/' + str(img) + '.png')
+		return getimageobject('res/' + str(img) + '.png')
+
+def getogg(snd):
+	return pygame.mixer.Sound('res/' + str(snd) + '.ogg')
 
 def isDownPress(e):
 	return e.type == pygame.KEYDOWN

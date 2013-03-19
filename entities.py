@@ -129,6 +129,7 @@ class Shot(Entity):
 		Entity.__init__(self, (x,y), self.sprite)
 
 		print orig.sprite, "fired a shot at", x, y
+		getogg("laser_single").play()
 
 	def tick(self, tick, entities, events):
 		# fly up or down
@@ -146,6 +147,8 @@ class Shot(Entity):
 		enemies = [e for e in entities if isinstance(e, Enemy)]
 		shots = [s for s in entities if isinstance(s, Shot)]
 
+		# This shot collision detection is ONE HUNDERT PERCENT BUGGY
+		# TODO: FIX IT
 		for enemy in enemies:
 			enemy_rect = enemy.get_rect()
 			for shot in shots:
@@ -154,3 +157,6 @@ class Shot(Entity):
 					enemy.die()
 					shot.die()
 					print "enemy killed"
+					for t in entities:
+						if isinstance(t, Player): t.score += 1
+					getogg("enemy123deathA").play()
