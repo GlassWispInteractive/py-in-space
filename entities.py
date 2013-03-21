@@ -85,7 +85,7 @@ class Player(Entity):
 
 class Enemy(Entity):
 	def __init__(self, x, y, type):
-		self.sprite = "enemy" + str(type)
+		self.sprite = "enemy" + str(type) + 'a'
 		Entity.__init__(self, (x, y), self.sprite)
 		self.direction = Entity.right
 
