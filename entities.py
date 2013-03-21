@@ -129,7 +129,7 @@ class Shot(Entity):
 		Entity.__init__(self, (x,y), self.sprite)
 
 		print orig.sprite, "fired a shot at", x, y
-		getogg("laser_single").play()
+		if SOUND: getogg("laser_single").play()
 
 	def tick(self, tick, entities, events):
 		# fly up or down
@@ -159,4 +159,4 @@ class Shot(Entity):
 					print "enemy killed"
 					for t in entities:
 						if isinstance(t, Player): t.score += 1
-					getogg("enemy123deathA").play()
+					if SOUND: getogg("enemy123deathA").play()

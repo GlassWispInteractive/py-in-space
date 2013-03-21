@@ -13,8 +13,9 @@ pygame.display.set_caption('PyInSpace!')
 display = pygame.display.set_mode((900, 500))
 menufont = pygame.font.SysFont("monospace", 28)
 hudfont = pygame.font.Font("res/ubuntu_mono.ttf", 20)
-pygame.mixer.music.load("res/JustInSpace-Galaxy.ogg")
-pygame.mixer.music.play()
+if MUSIC:
+	pygame.mixer.music.load("res/JustInSpace-Galaxy.ogg")
+	pygame.mixer.music.play()
 fpsClock = pygame.time.Clock()
 tick = 0
 FPS = 30
