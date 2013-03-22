@@ -1,11 +1,7 @@
 # -*- coding: utf-8 *-*
 import pygame
 
-import socket
-if socket.gethostname() == 'T430':
-	MUSIC = SOUND = False
-else:
-	MUSIC = SOUND = True
+SOUND = False
 
 def getimageobject(img):
 	if img.endswith('.png'):

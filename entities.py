@@ -76,7 +76,7 @@ class Player(Entity):
 			self.offset -= Player.MovementSpeed
 		elif self.offset < 56 * 7 and self.direction == Entity.right:
 			self.offset += Player.MovementSpeed
-		self.x = 418 + self.offset
+		self.x = 424 + self.offset
 
 	def spawn_shot(self, entities):
 		if self.cooldown < 1:
@@ -93,6 +93,7 @@ class Enemy(Entity):
 		pass
 		# TODO: move and fire
 
+	@staticmethod
 	def populate(count):
 		enemies = list()
 		border = (30,40) # (x,y)
@@ -100,8 +101,6 @@ class Enemy(Entity):
 		for i in range(1,count):
 			enemies.append(Enemy((i*offset[0]+border[0]), (i+border[1]), i%3+1))
 		return enemies
-
-	populate = staticmethod(populate)
 
 class Shot(Entity):
 	PlayerShotSpeed = 7
@@ -128,7 +127,7 @@ class Shot(Entity):
 
 		Entity.__init__(self, (x,y), self.sprite)
 
-		print orig.sprite, "fired a shot at", x, y
+		# print orig.sprite, "fired a shot at", x, y
 		if SOUND: getogg("laser_single").play()
 
 	def tick(self, tick, entities, events):
@@ -156,7 +155,7 @@ class Shot(Entity):
 				if enemy_rect.colliderect(shot_rect):
 					enemy.die()
 					shot.die()
-					print "enemy killed"
+					# print "enemy killed"
 					for t in entities:
 						if isinstance(t, Player): t.score += 1
 					if SOUND: getogg("enemy123deathA").play()
