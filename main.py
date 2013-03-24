@@ -5,10 +5,10 @@ from random import randint
 
 pygame.init()
 
-# constants
 FONT = pygame.font.Font("res/starcraft.ttf", 20)
 TIMER = pygame.time.Clock()
 FPS = 30 # 30 frames per second
+tick = 0
 MUSIC = False
 TEXT_COLOR = (200, 200, 200)
 MOVEMENT_KEYS = [K_LEFT, K_RIGHT, K_SPACE]
@@ -22,12 +22,27 @@ if MUSIC:
 	pygame.mixer.music.load("res/JustInSpace-Galaxy.ogg")
 	pygame.mixer.music.play()
 
-tick = 0
-
+# load all sprites at the beginning
+SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
+			for s in [ 'award_bronze', 'award_silver', 'award_gold',
+				'coin_bronze', 'coin_silver', 'coin_gold',
+				'coin_stack', 'coin_stacks',
+				'enemy1', 'enemy1a', 'enemy1b', 'enemy1shot',
+				'enemy2', 'enemy2a', 'enemy2b', 'enemy2shot',
+				'enemy3', 'enemy3a', 'enemy3b', 'enemy3shot',
+				'player', 'playerold', 'playershot',
+				'ufo', 'ufoold', 'ufooldshot',
+				'empty', 'logo',
+				'heart', 'shield', 'lightning',
+				'fire', 'diamond', 'ruby' ]
+			}
+SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
+			for s in ['laser_single']
+			}
 
 # helper functions
-getsurface = lambda x: pygame.image.load('res/' + str(x) + '.png')
-getogg = lambda x: pygame.mixer.Sound('res/' + str(x) + '.ogg')
+getsurface = lambda s: SPRITES[str(s)] if str(s) in SPRITES else pygame.image.load('res/' + str(s) + '.png').convert_alpha()
+getogg = lambda s: SOUNDS[str(s)] if str(s) in SOUNDS else pygame.mixer.Sound('res/' + str(s) + '.ogg')
 
 
 def render(func=None):
@@ -88,7 +103,8 @@ def game():
 	if state is not game: return
 
 	info = zip(map(lambda s: getsurface(s), ['heart', 'shield', 'lightning', 'coin_stacks']),
-		[0, 80, 160, 800], map(str, [player.health, player.shield, player.thunder, player.score]))
+			[0, 80, 160, 800],
+			map(str, [player.health, player.shield, player.thunder, player.score]))
 
 	for img, px, txt in info:
 		DISPLAY.blit(img, (4+px, 4))
