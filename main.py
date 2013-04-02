@@ -35,10 +35,10 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 				'empty', 'logo',
 				'heart', 'shield', 'lightning',
 				'fire', 'diamond', 'ruby' ]
-			}
+		  }
 SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
 			for s in ['laser_single']
-			}
+		 }
 
 # helper functions
 getsurface = lambda s: SPRITES[str(s)] if str(s) in SPRITES else pygame.image.load('res/' + str(s) + '.png').convert_alpha()
@@ -66,7 +66,7 @@ render.funcs = []
 def starsky():
 	''' render astonishing star sky. '''
 	if tick % 100 == 0:
-		for i in range(randint(0, 25 - len(starsky.stars))):
+		for _ in xrange(randint(0, 25 - len(starsky.stars))):
 			starsky.stars.append((randint(22, 882), randint(-500, 0), 0))
 	# update and delete stars
 	if tick % 3 == 0:
@@ -79,7 +79,7 @@ def starsky():
 	# render stars
 	for x, y, z in starsky.stars:
 		pygame.draw.circle(DISPLAY, (60+z%190, 60+z%190, 60+z%190), (x, y), 2)
-starsky.stars = [(randint(50, 850), randint(50, 450), 0) for i in range(randint(5, 10))]
+starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in xrange(randint(5, 10))]
 
 
 @render
@@ -102,7 +102,7 @@ def game():
 	# no rendering if not in-game
 	if state is not game: return
 
-	info = zip(map(lambda s: getsurface(s), ['heart', 'shield', 'lightning', 'coin_stacks']),
+	info = zip(map(getsurface, ['heart', 'shield', 'lightning', 'coin_stacks']),
 			[0, 80, 160, 800],
 			map(str, [player.health, player.shield, player.thunder, player.score]))
 
