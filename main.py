@@ -268,7 +268,7 @@ while state:
 			newshot = pygame.sprite.Sprite()
 			newshot.image = getsurface('playershot')
 			newshot.rect = newshot.image.get_rect()
-			newshot.rect.topleft = (54+7*player.xUnits, 440)
+			newshot.rect.topleft = (56+7*player.xUnits, 440)
 			player.shots.add(newshot)
 			if DEBUG: print "player fired a shot at x=%d" % newshot.rect.x
 			playsound('laser_single')
