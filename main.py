@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 *-*
 import pygame
 #from pygame.locals import *		# import pygame.locals as pyloc
@@ -12,6 +13,7 @@ MUSIC = { 'active' : True,
 			'game' : "res/DataCorruption.ogg"
 		}
 TIMER = pygame.time.Clock()
+DEBUG = True
 FPS = 30 # 30 frames per second seems reasonable
 tick = 0
 TEXT_COLOR = (200, 200, 200)
@@ -21,9 +23,11 @@ KEYS = MOVEMENT_KEYS + CONTROL_KEYS
 
 # pygame inits
 pygame.display.set_caption('PyInSpace!')
+if DEBUG: print "initialzing display"
 DISPLAY = pygame.display.set_mode((900, 500))
 
 # load all sprites at the beginning
+if DEBUG: print "precaching sprites"
 SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 			for s in [ 'award_bronze', 'award_silver', 'award_gold',
 				'coin_bronze', 'coin_silver', 'coin_gold',
@@ -37,14 +41,16 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 				'heart', 'shield', 'lightning',
 				'fire', 'diamond', 'ruby' ]
 		  }
+if DEBUG: print "precaching sounds"
 SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
 			for s in ['laser_single', 'menu-confirm', 'confirm', 'playerdeath',
 					  'enemy123deathA', 'enemy123deathB', 'ufodeath']
 		 }
 
 # helper functions
-getsurface = lambda s: SPRITES[str(s)] if str(s) in SPRITES else pygame.image.load('res/' + str(s) + '.png').convert_alpha()
-getogg = lambda s: SOUNDS[str(s)] if str(s) in SOUNDS else pygame.mixer.Sound('res/' + str(s) + '.ogg')
+getsurface = lambda s: SPRITES[s] if s in SPRITES else pygame.image.load('res/' + s + '.png').convert_alpha()
+getogg = lambda s: SOUNDS[s] if s in SOUNDS else pygame.mixer.Sound('res/' + s + '.ogg')
+playsound = lambda s: getogg(s).play()
 
 
 def render(func=None):
@@ -140,6 +146,8 @@ def player():
 	DISPLAY.blit(getsurface('player'), (32+7*player.xUnits, 440))
 
 	player.shots.draw(DISPLAY) # these shots look ok when rendered by the group
+player.xUnits = 56
+player.movement = 7
 
 
 @render
@@ -168,15 +176,15 @@ def invaders():
 		invader.rect.topleft = (26+8*x, 45+8*y)
 		DISPLAY.blit(invader.image, (invader.rect.x, invader.rect.y))
 		#invaders.mob.draw(DISPLAY) # TODO: flashes...?!
+invaders.movement = 7
 
 
 def initialize_game():
+	if DEBUG: print "initializing game mode"
 	player.health	= 5
 	player.shield	= 0
 	player.thunder	= 9
 	player.shots	= pygame.sprite.OrderedUpdates() # do these need to be ordered?
-	player.xUnits	= 56
-	player.movement	= 7
 	player.cooldown	= 0
 	player.score	= 0
 	player.reload	= 0
@@ -188,14 +196,14 @@ def initialize_game():
 		next.n = i
 		invaders.mob.add(next)
 	invaders.shots = []
-	invaders.movement = 7
-	
+
 
 # final inits
 state = menu
-laststate = game # just needs to be something else than state in the beginning
+laststate = game # just needs to be something else than state
 events = []
 
+if DEBUG: print "entering main game loop"
 # main game loop
 while state:
 
@@ -204,6 +212,7 @@ while state:
 		# quit event
 		if e.type == QUIT:
 			state = None
+			continue
 
 		# skip event
 		if e.type not in [KEYDOWN, KEYUP] or e.key not in KEYS:
@@ -217,21 +226,29 @@ while state:
 
 	# start game
 	if state is menu and K_RETURN in events:
+		if DEBUG: print "entering game"
 		initialize_game()
-		#getogg('menu-confirm').play()
+		#playsound('menu-confirm')
 		state = game
 		continue
 
 	# back to menu
 	if state is game and K_ESCAPE in events:
 		#cleanup_game() # ?
+		if DEBUG: print "leaving game"
 		state = menu
+		continue
 	
 	if (MUSIC['active']):
 		if laststate != state:
-			pygame.mixer.music.load(MUSIC[str(state.__name__)])
-			pygame.mixer.music.play()
-		laststate = state
+			try:
+				#pygame.mixer.music.fadeout(200) # TODO: BLOCKS WHILE FADING OUT
+				pygame.mixer.music.load(MUSIC[str(state.__name__)])
+				pygame.mixer.music.play()
+				if DEBUG: print "current music: %s" % MUSIC[str(state.__name__)]
+				laststate = state
+			except AttributeError:
+				pass
 
 	if state is game:
 		# move player
@@ -253,16 +270,18 @@ while state:
 			newshot.rect = newshot.image.get_rect()
 			newshot.rect.topleft = (54+7*player.xUnits, 440)
 			player.shots.add(newshot)
-			getogg('laser_single').play()
+			if DEBUG: print "player fired a shot at x=%d" % newshot.rect.x
+			playsound('laser_single')
 
 		# It'z time to make the magicz...
 		# noo, just doing the collision detection and dying in one line
-		pygame.sprite.groupcollide(player.shots, invaders.mob, True, True)
+		enemies_hit = pygame.sprite.groupcollide(player.shots, invaders.mob, True, True)
 
 	render() # waiting is done in render
 	tick = tick % 3000 + 1 # avoid overflow
 
 
 # tidy up and quit
+if DEBUG: print "quitting"
 pygame.quit()
 
