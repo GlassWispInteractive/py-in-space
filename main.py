@@ -32,11 +32,9 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 			for s in [ 'award_bronze', 'award_silver', 'award_gold',
 				'coin_bronze', 'coin_silver', 'coin_gold',
 				'coin_stack', 'coin_stacks',
-				'enemy1a', 'enemy1b', 'enemy1shot',
-				'enemy2a', 'enemy2b', 'enemy2shot',
-				'enemy3a', 'enemy3b', 'enemy3shot',
+				'enemy1a', 'enemy1b', 'enemy2a', 'enemy2b',
+				'enemy3a', 'enemy3b', 'ufo', 'enemyshot',
 				'player', 'playershot',
-				'ufo', 'ufoshot',
 				'empty', 'logo',
 				'heart', 'shield', 'lightning',
 				'fire', 'diamond', 'ruby' ]
@@ -238,7 +236,7 @@ while state:
 		if DEBUG: print "leaving game"
 		state = menu
 		continue
-	
+
 	if (MUSIC['active']):
 		if laststate != state:
 			try:
@@ -268,7 +266,7 @@ while state:
 			newshot = pygame.sprite.Sprite()
 			newshot.image = getsurface('playershot')
 			newshot.rect = newshot.image.get_rect()
-			newshot.rect.topleft = (56+7*player.xUnits, 440)
+			newshot.rect.topleft = (55+7*player.xUnits, 440)
 			player.shots.add(newshot)
 			if DEBUG: print "player fired a shot at x=%d" % newshot.rect.x
 			playsound('laser_single')
