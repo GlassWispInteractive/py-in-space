@@ -23,11 +23,11 @@ KEYS = MOVEMENT_KEYS + CONTROL_KEYS
 
 # pygame inits
 pygame.display.set_caption('PyInSpace!')
-if DEBUG: print "initialzing display"
+if DEBUG: print("initialzing display")
 DISPLAY = pygame.display.set_mode((900, 500))
 
 # load all sprites at the beginning
-if DEBUG: print "precaching sprites"
+if DEBUG: print("precaching sprites")
 SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 			for s in [ 'award_bronze', 'award_silver', 'award_gold',
 				'coin_bronze', 'coin_silver', 'coin_gold',
@@ -39,7 +39,7 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 				'heart', 'shield', 'lightning',
 				'fire', 'diamond', 'ruby' ]
 		  }
-if DEBUG: print "precaching sounds"
+if DEBUG: print("precaching sounds")
 SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
 			for s in ['laser_single', 'menu-confirm', 'confirm', 'playerdeath',
 					  'enemy123deathA', 'enemy123deathB', 'ufodeath']
@@ -72,7 +72,7 @@ render.funcs = []
 def starsky():
 	''' render astonishing star sky. '''
 	if tick % 100 == 0:
-		for _ in xrange(randint(0, 25 - len(starsky.stars))):
+		for _ in range(randint(0, 25 - len(starsky.stars))):
 			starsky.stars.append((randint(22, 882), randint(-500, 0), 0))
 	# update and delete stars
 	if tick % 3 == 0:
@@ -86,7 +86,7 @@ def starsky():
 	for x, y, z in starsky.stars:
 		pygame.draw.circle(DISPLAY, (60+z%190, 60+z%190, 60+z%190), (x, y), 2)
 # mode doesn't matter for the bg, so initialsing it once is ok
-starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in xrange(randint(5, 10))]
+starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in range(randint(5, 10))]
 
 
 @render
@@ -109,9 +109,9 @@ def game():
 	# no rendering if not in-game
 	if state is not game: return
 
-	info = zip(map(getsurface, ['heart', 'shield', 'lightning', 'coin_stacks']),
+	info = list(zip(list(map(getsurface, ['heart', 'shield', 'lightning', 'coin_stacks'])),
 			[0, 80, 160, 800],
-			map(str, [player.health, player.shield, player.thunder, player.score]))
+			list(map(str, [player.health, player.shield, player.thunder, player.score]))))
 
 	for img, px, txt in info:
 		DISPLAY.blit(img, (4+px, 4))
@@ -178,7 +178,7 @@ invaders.movement = 7
 
 
 def initialize_game():
-	if DEBUG: print "initializing game mode"
+	if DEBUG: print("initializing game mode")
 	player.health	= 5
 	player.shield	= 0
 	player.thunder	= 9
@@ -187,7 +187,7 @@ def initialize_game():
 	player.score	= 0
 	player.reload	= 0
 	invaders.mob = pygame.sprite.OrderedUpdates() # do these need to be ordered?
-	for i in xrange(0, 4000, 80):
+	for i in range(0, 4000, 80):
 		next = pygame.sprite.Sprite()
 		next.image = getsurface('enemy'+str((i/80)%3+1)+'a')
 		next.rect = next.image.get_rect()
@@ -201,7 +201,7 @@ state = menu
 laststate = game # just needs to be something else than state
 events = []
 
-if DEBUG: print "entering main game loop"
+if DEBUG: print("entering main game loop")
 # main game loop
 while state:
 
@@ -224,7 +224,7 @@ while state:
 
 	# start game
 	if state is menu and K_RETURN in events:
-		if DEBUG: print "entering game"
+		if DEBUG: print("entering game")
 		initialize_game()
 		#playsound('menu-confirm')
 		state = game
@@ -233,7 +233,7 @@ while state:
 	# back to menu
 	if state is game and K_ESCAPE in events:
 		#cleanup_game() # ?
-		if DEBUG: print "leaving game"
+		if DEBUG: print("leaving game")
 		state = menu
 		continue
 
@@ -243,7 +243,7 @@ while state:
 				#pygame.mixer.music.fadeout(200) # TODO: BLOCKS WHILE FADING OUT
 				pygame.mixer.music.load(MUSIC[str(state.__name__)])
 				pygame.mixer.music.play()
-				if DEBUG: print "current music: %s" % MUSIC[str(state.__name__)]
+				if DEBUG: print("current music: %s" % MUSIC[str(state.__name__)])
 				laststate = state
 			except AttributeError:
 				pass
@@ -268,7 +268,7 @@ while state:
 			newshot.rect = newshot.image.get_rect()
 			newshot.rect.topleft = (55+7*player.xUnits, 440)
 			player.shots.add(newshot)
-			if DEBUG: print "player fired a shot at x=%d" % newshot.rect.x
+			if DEBUG: print("player fired a shot at x=%d" % newshot.rect.x)
 			playsound('laser_single')
 
 		# It'z time to make the magicz...
@@ -280,6 +280,6 @@ while state:
 
 
 # tidy up and quit
-if DEBUG: print "quitting"
+if DEBUG: print("quitting")
 pygame.quit()
 
