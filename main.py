@@ -1,15 +1,19 @@
 # -*- coding: utf-8 *-*
 import pygame
-from pygame.locals import *		# import pygame.locals as pyloc
+#from pygame.locals import *		# import pygame.locals as pyloc
+from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEYUP, KEYDOWN, QUIT
 from random import randint
 
 pygame.init()
 
 FONT = pygame.font.Font("res/starcraft.ttf", 20)
+MUSIC = { 'active' : True,
+			'menu' : "res/ObservingTheStar.ogg",
+			'game' : "res/DataCorruption.ogg"
+		}
 TIMER = pygame.time.Clock()
-FPS = 30 # 30 frames per second
+FPS = 30 # 30 frames per second seems reasonable
 tick = 0
-MUSIC = False
 TEXT_COLOR = (200, 200, 200)
 MOVEMENT_KEYS = [K_LEFT, K_RIGHT, K_SPACE]
 CONTROL_KEYS = [K_RETURN, K_ESCAPE, K_p]
@@ -18,9 +22,6 @@ KEYS = MOVEMENT_KEYS + CONTROL_KEYS
 # pygame inits
 pygame.display.set_caption('PyInSpace!')
 DISPLAY = pygame.display.set_mode((900, 500))
-if MUSIC:
-	pygame.mixer.music.load("res/JustInSpace-Galaxy.ogg")
-	pygame.mixer.music.play()
 
 # load all sprites at the beginning
 SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
@@ -37,7 +38,8 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 				'fire', 'diamond', 'ruby' ]
 		  }
 SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
-			for s in ['laser_single']
+			for s in ['laser_single', 'menu-confirm', 'confirm', 'playerdeath',
+					  'enemy123deathA', 'enemy123deathB', 'ufodeath']
 		 }
 
 # helper functions
@@ -79,6 +81,7 @@ def starsky():
 	# render stars
 	for x, y, z in starsky.stars:
 		pygame.draw.circle(DISPLAY, (60+z%190, 60+z%190, 60+z%190), (x, y), 2)
+# mode doesn't matter for the bg, so initialsing it once is ok
 starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in xrange(randint(5, 10))]
 
 
@@ -120,7 +123,9 @@ def player():
 	if state is not game: return
 
 	# move shots
-	player.shots = [(x, y+1) for x, y in player.shots if y < 60]
+	for shot in player.shots:
+		shot.rect.y -= 7
+		if shot.rect.y < -20: player.shots.remove(shot) # TODO: PROBABLY DANGEROUS
 
 	# reload thunder
 	player.reload = (player.reload + 1) % 40
@@ -133,22 +138,13 @@ def player():
 
 	# render stuff
 	DISPLAY.blit(getsurface('player'), (32+7*player.xUnits, 440))
-	for x, y in player.shots:
-		DISPLAY.blit(getsurface('playershot'), (54+7*x, 440-7*y))
-player.health	= 5
-player.shield	= 0
-player.thunder	= 9
-player.shots	= []
-player.xUnits	= 56
-player.movement	= 7
-player.cooldown	= 0
-player.score	= 0
-player.reload	= 0
+
+	player.shots.draw(DISPLAY) # these shots look ok when rendered by the group
 
 
 @render
-def mobs():
-	''' Renders enemies and shots '''
+def invaders():
+	''' Renders enemies and their shots '''
 	# no rendering if not in-game
 	if state is not game: return
 
@@ -165,25 +161,45 @@ def mobs():
 				n -= 8
 		return abs(x) % 100, y
 
-	for i in range(len(mobs.enemy)):
-		n = mobs.enemy[i]
-		mobs.enemy[i] += 1
+	for invader in invaders.mob:
+		n = invader.n
+		invader.n += 1
 		x, y = f(n)
-		DISPLAY.blit(getsurface('enemy1a'), (26+8*x, 45+8*y))
-mobs.enemy = [i for i in range(0, 4000, 80)]
-mobs.shots = []
-mobs.movement = 7
+		invader.rect.topleft = (26+8*x, 45+8*y)
+		DISPLAY.blit(invader.image, (invader.rect.x, invader.rect.y))
+		#invaders.mob.draw(DISPLAY) # TODO: flashes...?!
 
 
+def initialize_game():
+	player.health	= 5
+	player.shield	= 0
+	player.thunder	= 9
+	player.shots	= pygame.sprite.OrderedUpdates() # do these need to be ordered?
+	player.xUnits	= 56
+	player.movement	= 7
+	player.cooldown	= 0
+	player.score	= 0
+	player.reload	= 0
+	invaders.mob = pygame.sprite.OrderedUpdates() # do these need to be ordered?
+	for i in xrange(0, 4000, 80):
+		next = pygame.sprite.Sprite()
+		next.image = getsurface('enemy'+str((i/80)%3+1)+'a')
+		next.rect = next.image.get_rect()
+		next.n = i
+		invaders.mob.add(next)
+	invaders.shots = []
+	invaders.movement = 7
+	
 
 # final inits
 state = menu
+laststate = game # just needs to be something else than state in the beginning
 events = []
 
 # main game loop
 while state:
-	# even handling
 
+	# event handling
 	for e in pygame.event.get():
 		# quit event
 		if e.type == QUIT:
@@ -201,12 +217,21 @@ while state:
 
 	# start game
 	if state is menu and K_RETURN in events:
+		initialize_game()
+		#getogg('menu-confirm').play()
 		state = game
 		continue
 
 	# back to menu
-	if K_ESCAPE in events:
+	if state is game and K_ESCAPE in events:
+		#cleanup_game() # ?
 		state = menu
+	
+	if (MUSIC['active']):
+		if laststate != state:
+			pygame.mixer.music.load(MUSIC[str(state.__name__)])
+			pygame.mixer.music.play()
+		laststate = state
 
 	if state is game:
 		# move player
@@ -217,11 +242,22 @@ while state:
 
 		# shoot player
 		if K_SPACE in events and player.thunder > 0 and player.cooldown == 0:
-			#player.thunder -= 1 # TODO: workout a good balance between infinity shooting and having less ammo
+			# TODO: workout a good balance between infinity shooting and having less ammo
+			#player.thunder -= 1
 			player.reload = 20
 			player.cooldown = 7
-			player.shots.append((player.xUnits, 0))
+
+			#player.shots.append((player.xUnits, 0))
+			newshot = pygame.sprite.Sprite()
+			newshot.image = getsurface('playershot')
+			newshot.rect = newshot.image.get_rect()
+			newshot.rect.topleft = (54+7*player.xUnits, 440)
+			player.shots.add(newshot)
 			getogg('laser_single').play()
+
+		# It'z time to make the magicz...
+		# noo, just doing the collision detection and dying in one line
+		pygame.sprite.groupcollide(player.shots, invaders.mob, True, True)
 
 	render() # waiting is done in render
 	tick = tick % 3000 + 1 # avoid overflow
