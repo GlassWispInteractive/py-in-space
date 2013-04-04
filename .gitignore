@@ -37,3 +37,4 @@ nosetests.xml
 *.nja
 *.geany
 
+*.py~
