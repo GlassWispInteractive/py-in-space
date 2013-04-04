@@ -9,6 +9,7 @@ pygame.init()
 
 MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
 HUD_FONT = pygame.font.Font("res/pixel.ttf", 20)
+
 MUSIC = { 'active' : True,
 			'menu' : "res/ObservingTheStar.ogg",
 			'game' : "res/DataCorruption.ogg"
@@ -101,6 +102,7 @@ def milestone():
 	LEAGUE.pop(0)
 
 	# get sprite, animation
+	# spriteLeague = getsurface('league' + str(new_level))
 
 
 	# TODO: increase difficulty
@@ -148,8 +150,10 @@ def player():
 	# move shots
 	for shot in player.shots:
 		shot.rect.y -= 7
-		if shot.rect.y < -20: player.shots.remove(shot) # TODO: PROBABLY DANGEROUS
-
+		if shot.rect.y < -20:
+			player.shots.remove(shot)
+			del shot
+			
 	# reload thunder
 	player.reload = (player.reload + 1) % 100
 	if player.reload == 99 and player.thunder < 9:
@@ -170,33 +174,45 @@ player.movement = 7
 @render
 def invaders():
 	''' Renders enemies and their shots '''
+	def move(e, x, y):
+		e.pos = (e.pos[0] + x, e.pos[1] + y)
+	
 	# no rendering if not in-game
 	if state is not game: return
-
-	# TODO: new move function, because you cant miss invaders
-	def f(n):
-		x, y, n = 1, 0, n - 8
-		while n >= 8:
-			while abs(x) % 100 != 0 and n >= 8:
-				x += 1
-				n -= 8
-			x = x * -1 + 1
-			cur = y + 6
-			while y < cur and n >= 8:
-				y += 1
-				n -= 8
-		return abs(x) % 100, y
-
+	
+	# mob variables
+	xMin = min(map(lambda e:e.pos[0], invaders.mob))
+	xMax = max(map(lambda e:e.pos[0], invaders.mob))
+	
+	if tick % 20 == 0:
+		if invaders.dir == (True, 0):
+			if xMax >= 30: invaders.dir = (True, 3)
+		elif invaders.dir == (False, 0):
+			if xMin <= 0: invaders.dir = (False, 3)
+		else:
+			a, b = invaders.dir
+			invaders.dir = (not a, b - 1)
+	
 	for invader in invaders.mob:
-		n = invader.n
-		invader.n += 1
-		x, y = f(n)
-		invader.rect.topleft = (26+8*x, 45+8*y)
+		# move invader
+		x, y = invader.pos
+		if tick % 20 == 0:
+			if invaders.dir == (True, 0):
+				if xMax < 30: x += 1
+			elif invaders.dir == (False, 0):
+				if xMin > 0: x -= 1
+			else:
+				y += 1
+			
+			invader.pos = (x, y)
+		
+		# render invader
+		invader.rect.topleft = (26+25*x, 45+10*y)
 		DISPLAY.blit(invader.image, (invader.rect.x, invader.rect.y))
 		#invaders.mob.draw(DISPLAY) # TODO: flashes...?!
 		# Hast du das problem auch dass das malen über die Group flackert?
 invaders.movement = 7
-
+invaders.dir = (True, 0)
 
 def initialize_game():
 	if DEBUG: print("initializing game mode")
@@ -208,15 +224,14 @@ def initialize_game():
 	player.score	= 0
 	player.reload	= 0
 	invaders.mob = pygame.sprite.OrderedUpdates() # do these need to be ordered?
-	for i in range(0, 4000, 80):
-		next = pygame.sprite.Sprite()
-		# TODO: first row should be enemy type 1
-		#       second and third row should be enemy type 2
-		#       fourth and fifth row should be enemy type 3
-		next.image = getsurface('enemy'+str((i//80)%3+1)+'a3')
-		next.rect = next.image.get_rect()
-		next.n = i
-		invaders.mob.add(next)
+	
+	for x in range(0,30,3):
+		for y in range(0, 18, 3):
+			next = pygame.sprite.Sprite()
+			next.image = getsurface('enemy'+str(y%3+1)+'a3')
+			next.rect = next.image.get_rect()
+			next.pos = (x, y)
+			invaders.mob.add(next)
 	invaders.shots = []
 
 
