@@ -7,14 +7,15 @@ from random import randint
 
 pygame.init()
 
-FONT = pygame.font.Font("res/starcraft.ttf", 20)
+MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
+HUD_FONT = pygame.font.Font("res/pixel.ttf", 20)
 MUSIC = { 'active' : True,
 			'menu' : "res/ObservingTheStar.ogg",
 			'game' : "res/DataCorruption.ogg"
 		}
 TIMER = pygame.time.Clock()
 DEBUG = False
-FPS = 30 # 30 frames per second seems reasonable
+FPS = 30 # 30 frames per second seem reasonable
 tick = 0
 TEXT_COLOR = (200, 200, 200)
 MOVEMENT_KEYS = [K_LEFT, K_RIGHT, K_SPACE]
@@ -98,10 +99,10 @@ def milestone():
 	state = milestone
 	new_level = 6 - len(LEAGUE) # 6 leagues - remaining milestones
 	LEAGUE.pop(0)
-	
+
 	# get sprite, animation
-	
-	
+
+
 	# TODO: increase difficulty
 	player.thunderMax = 9 - new_level
 	player.shield = max(0, player.shield - 1)
@@ -116,7 +117,7 @@ def menu():
 	DISPLAY.blit(getsurface('logo'), (157, 100))
 	pygame.draw.rect(DISPLAY, (192, 192, 192), (250, 300, 400, 60))
 	pygame.draw.rect(DISPLAY, (80, 80, 80), (255, 305, 390, 50))
-	label = FONT.render("Press ENTER to start", 1, TEXT_COLOR)
+	label = MENU_FONT.render("Press ENTER to start", 1, TEXT_COLOR)
 	pos = label.get_rect(centerx = 450, centery = 330)
 	DISPLAY.blit(label, pos)
 
@@ -133,7 +134,7 @@ def game():
 
 	for img, px, txt in info:
 		DISPLAY.blit(img, (4+px, 4))
-		label = FONT.render(txt, 1, TEXT_COLOR)
+		label = HUD_FONT.render(txt, 1, TEXT_COLOR)
 		pos = label.get_rect(left = 40+px, centery = 20)
 		DISPLAY.blit(label, pos)
 
@@ -171,7 +172,7 @@ def invaders():
 	''' Renders enemies and their shots '''
 	# no rendering if not in-game
 	if state is not game: return
-	
+
 	# TODO: new move function, because you cant miss invaders
 	def f(n):
 		x, y, n = 1, 0, n - 8
@@ -193,12 +194,13 @@ def invaders():
 		invader.rect.topleft = (26+8*x, 45+8*y)
 		DISPLAY.blit(invader.image, (invader.rect.x, invader.rect.y))
 		#invaders.mob.draw(DISPLAY) # TODO: flashes...?!
+		# Hast du das problem auch dass das malen über die Group flackert?
 invaders.movement = 7
 
 
 def initialize_game():
 	if DEBUG: print("initializing game mode")
-	player.health	= 5
+	player.health	= 3
 	player.shield	= 0
 	player.thunder	= 9
 	player.shots	= pygame.sprite.OrderedUpdates() # do these need to be ordered?
@@ -208,6 +210,9 @@ def initialize_game():
 	invaders.mob = pygame.sprite.OrderedUpdates() # do these need to be ordered?
 	for i in range(0, 4000, 80):
 		next = pygame.sprite.Sprite()
+		# TODO: first row should be enemy type 1
+		#       second and third row should be enemy type 2
+		#       fourth and fifth row should be enemy type 3
 		next.image = getsurface('enemy'+str((i/80)%3+1)+'a')
 		next.rect = next.image.get_rect()
 		next.n = i
@@ -271,11 +276,11 @@ while state:
 		# move player
 		if K_LEFT in events and player.xUnits > 0:
 			player.xUnits -= 1
-			
-			
+
+
 		elif K_RIGHT in events and player.xUnits < 112:
 			player.xUnits += 1
-			
+
 
 		# shoot player
 		if K_SPACE in events and player.thunder > 0 and player.cooldown == 0:
