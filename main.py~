@@ -171,8 +171,7 @@ def invaders():
 	''' Renders enemies and their shots '''
 	# no rendering if not in-game
 	if state is not game: return
-	
-	# TODO: new move function, because you cant miss invaders
+
 	def f(n):
 		x, y, n = 1, 0, n - 8
 		while n >= 8:
