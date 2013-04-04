@@ -213,7 +213,7 @@ def initialize_game():
 		# TODO: first row should be enemy type 1
 		#       second and third row should be enemy type 2
 		#       fourth and fifth row should be enemy type 3
-		next.image = getsurface('enemy'+str((i/80)%3+1)+'a')
+		next.image = getsurface('enemy'+str((i//80)%3+1)+'a')
 		next.rect = next.image.get_rect()
 		next.n = i
 		invaders.mob.add(next)
