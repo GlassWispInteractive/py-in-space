@@ -34,12 +34,12 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 			for s in [ 'award_bronze', 'award_silver', 'award_gold',
 				'coin_bronze', 'coin_silver', 'coin_gold',
 				'coin_stack', 'coin_stacks',
-				'enemy1a', 'enemy1b', 'enemy2a', 'enemy2b',
-				'enemy3a', 'enemy3b', 'ufo', 'enemyshot',
+				'ufo', 'enemyshot',
 				'player', 'playershot',
 				'empty', 'logo',
 				'heart', 'shield', 'lightning',
 				'fire', 'diamond', 'ruby' ]
+				+ ["enemy"+str(i)+s+str(x) for x in range(3,5) for s in ['a','b'] for i in range(1,4)]
 		  }
 if DEBUG: print("precaching sounds")
 SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
@@ -213,7 +213,7 @@ def initialize_game():
 		# TODO: first row should be enemy type 1
 		#       second and third row should be enemy type 2
 		#       fourth and fifth row should be enemy type 3
-		next.image = getsurface('enemy'+str((i//80)%3+1)+'a')
+		next.image = getsurface('enemy'+str((i//80)%3+1)+'a3')
 		next.rect = next.image.get_rect()
 		next.n = i
 		invaders.mob.add(next)
