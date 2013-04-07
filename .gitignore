@@ -1,8 +1,9 @@
 *.py[cod]
 *.py~
-
-# C extensions
+*.o
 *.so
+*.hi
+*_stub.h
 
 # Packages
 *.egg
@@ -18,8 +19,6 @@ develop-eggs
 .installed.cfg
 lib
 lib64
-
-# Installer logs
 pip-log.txt
 
 # Unit test / coverage reports

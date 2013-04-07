@@ -1,21 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 *-*
+import sys
 import pygame
 #from pygame.locals import *		# import pygame.locals as pyloc
 from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEYUP, KEYDOWN, QUIT
 from random import randint
+
+DEBUG = True
+
+# because we can
+import ctypes
+hask = ctypes.cdll.LoadLibrary("./hasklib.so")
+ini = hask.hs_init(0, 0) # segfault without these args!
+if DEBUG: print("Haskell Library: " + str(hask) + " INIT: " + str(ini))
+del ini
 
 pygame.init()
 
 MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
 HUD_FONT = pygame.font.Font("res/pixel.ttf", 20)
 
-MUSIC = { 'active' : True,
-			'menu' : "res/ObservingTheStar.ogg",
-			'game' : "res/DataCorruption.ogg"
+MUSIC = {'active': True,
+			'menu': "res/ObservingTheStar.ogg",
+			'game': "res/DataCorruption.ogg"
 		}
 TIMER = pygame.time.Clock()
-DEBUG = False
 FPS = 30 # 30 frames per second seem reasonable
 tick = 0
 TEXT_COLOR = (200, 200, 200)
@@ -41,7 +50,7 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 				'heart', 'shield', 'lightning',
 				'fire', 'diamond', 'ruby' ]
 				+ ["enemy"+str(i)+s+str(x) for x in range(3,5) for s in ['a','b'] for i in range(1,4)]
-		  }
+		}
 if DEBUG: print("precaching sounds")
 SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
 			for s in ['laser_single', 'menu-confirm', 'confirm', 'playerdeath',
@@ -87,7 +96,8 @@ def starsky():
 
 	# render stars
 	for x, y, z in starsky.stars:
-		pygame.draw.circle(DISPLAY, (60+z%190, 60+z%190, 60+z%190), (x, y), 2)
+		b = hask.star_brightness(z)
+		pygame.draw.circle(DISPLAY, (b, b, b), (x, y), 2)
 # mode doesn't matter for the bg, so initialsing it once is ok
 starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in range(randint(5, 10))]
 
@@ -153,7 +163,7 @@ def player():
 		if shot.rect.y < -20:
 			player.shots.remove(shot)
 			del shot
-			
+
 	# reload thunder
 	player.reload = (player.reload + 1) % 100
 	if player.reload == 99 and player.thunder < 9:
@@ -164,7 +174,7 @@ def player():
 		player.cooldown -= 1
 
 	# render stuff
-	DISPLAY.blit(getsurface('player'), (32+7*player.xUnits, 440))
+	DISPLAY.blit(getsurface('player'), (hask.player_pos_x(player.xUnits), 440))
 
 	player.shots.draw(DISPLAY) # these shots are fine when rendered by the group
 player.xUnits = 56
@@ -176,14 +186,14 @@ def invaders():
 	''' Renders enemies and their shots '''
 	def move(e, x, y):
 		e.pos = (e.pos[0] + x, e.pos[1] + y)
-	
+
 	# no rendering if not in-game
 	if state is not game: return
-	
+
 	# mob variables
 	xMin = min(map(lambda e:e.pos[0], invaders.mob))
 	xMax = max(map(lambda e:e.pos[0], invaders.mob))
-	
+
 	if tick % 20 == 0:
 		if invaders.dir == (True, 0):
 			if xMax >= 30: invaders.dir = (True, 3)
@@ -192,10 +202,11 @@ def invaders():
 		else:
 			a, b = invaders.dir
 			invaders.dir = (not a, b - 1)
-	
+
 	for invader in invaders.mob:
 		# move invader
 		x, y = invader.pos
+		# TODO: smoother movement
 		if tick % 20 == 0:
 			if invaders.dir == (True, 0):
 				if xMax < 30: x += 1
@@ -203,14 +214,14 @@ def invaders():
 				if xMin > 0: x -= 1
 			else:
 				y += 1
-			
+
 			invader.pos = (x, y)
-		
+
 		# render invader
 		invader.rect.topleft = (26+25*x, 45+10*y)
 		DISPLAY.blit(invader.image, (invader.rect.x, invader.rect.y))
 		#invaders.mob.draw(DISPLAY) # TODO: flashes...?!
-		# Hast du das problem auch dass das malen über die Group flackert?
+		# Why do the enemies flicker when rendered by the Group?
 invaders.movement = 7
 invaders.dir = (True, 0)
 
@@ -224,7 +235,7 @@ def initialize_game():
 	player.score	= 0
 	player.reload	= 0
 	invaders.mob = pygame.sprite.OrderedUpdates() # do these need to be ordered?
-	
+
 	for x in range(0,30,3):
 		for y in range(0, 18, 3):
 			next = pygame.sprite.Sprite()
@@ -308,7 +319,7 @@ while state:
 			newshot = pygame.sprite.Sprite()
 			newshot.image = getsurface('playershot')
 			newshot.rect = newshot.image.get_rect()
-			newshot.rect.topleft = (55+7*player.xUnits, 440)
+			newshot.rect.topleft = (hask.new_shot_pos_x(player.xUnits), 440)
 			player.shots.add(newshot)
 			if DEBUG: print("player fired a shot at x=%d" % newshot.rect.x)
 			playsound('laser_single')
@@ -324,6 +335,10 @@ while state:
 
 
 # tidy up and quit
-if DEBUG: print("quitting")
+if DEBUG: print("exiting haskell lib")
+hask.hs_exit()
+if DEBUG: print("quitting pygame")
 pygame.quit()
+if DEBUG: print("terminating process")
+sys.exit()
 
