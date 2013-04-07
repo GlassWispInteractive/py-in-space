@@ -8,12 +8,15 @@ from random import randint
 
 DEBUG = True
 
-# because we can
-import ctypes
-hask = ctypes.cdll.LoadLibrary("./hasklib.so")
-ini = hask.hs_init(0, 0) # segfault without these args!
-if DEBUG: print("Haskell Library: " + str(hask) + " INIT: " + str(ini))
-del ini
+# import Haskell Library
+try:
+	import ctypes
+	hask = ctypes.cdll.LoadLibrary("./hasklib.so")
+	hask.hs_init(0, 0) # segfault without these args!
+	if DEBUG: print("hasklib: " + str(hask))
+except OSError:
+	import hasklib_fallback as hask
+	if DEBUG: print("using FALLBACK hasklib")
 
 pygame.init()
 
@@ -335,10 +338,11 @@ while state:
 
 
 # tidy up and quit
-if DEBUG: print("exiting haskell lib")
-hask.hs_exit()
+
+if isinstance(hask, ctypes.CDLL):
+	if DEBUG: print("exiting haskell lib")
+	hask.hs_exit()
 if DEBUG: print("quitting pygame")
 pygame.quit()
 if DEBUG: print("terminating process")
 sys.exit()
-
