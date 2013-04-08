@@ -8,16 +8,6 @@ from random import randint
 
 DEBUG = True
 
-# import Haskell Library
-try:
-	import ctypes
-	hask = ctypes.cdll.LoadLibrary("./hasklib.so")
-	hask.hs_init(0, 0) # segfault without these args!
-	if DEBUG: print("hasklib: " + str(hask))
-except OSError:
-	import hasklib_fallback as hask
-	if DEBUG: print("using FALLBACK hasklib")
-
 pygame.init()
 
 MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
@@ -99,7 +89,7 @@ def starsky():
 
 	# render stars
 	for x, y, z in starsky.stars:
-		b = hask.star_brightness(z)
+		b = 60 + z % 190
 		pygame.draw.circle(DISPLAY, (b, b, b), (x, y), 2)
 # mode doesn't matter for the bg, so initialsing it once is ok
 starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in range(randint(5, 10))]
@@ -177,7 +167,7 @@ def player():
 		player.cooldown -= 1
 
 	# render stuff
-	DISPLAY.blit(getsurface('player'), (hask.player_pos_x(player.xUnits), 440))
+	DISPLAY.blit(getsurface('player'), (32 + 7 * player.xUnits, 440))
 
 	player.shots.draw(DISPLAY) # these shots are fine when rendered by the group
 player.xUnits = 56
@@ -322,7 +312,7 @@ while state:
 			newshot = pygame.sprite.Sprite()
 			newshot.image = getsurface('playershot')
 			newshot.rect = newshot.image.get_rect()
-			newshot.rect.topleft = (hask.new_shot_pos_x(player.xUnits), 440)
+			newshot.rect.topleft = (55 + 7 * player.xUnits, 440)
 			player.shots.add(newshot)
 			if DEBUG: print("player fired a shot at x=%d" % newshot.rect.x)
 			playsound('laser_single')
