@@ -155,7 +155,6 @@ def player():
 		shot.rect.y -= 7
 		if shot.rect.y < -20:
 			player.shots.remove(shot)
-			del shot
 
 	# reload thunder
 	player.reload = (player.reload + 1) % 100
@@ -239,9 +238,21 @@ def initialize_game():
 	invaders.shots = []
 
 
+def adjust_music(state):
+	if adjust_music.laststate != state:
+		try:
+			#pygame.mixer.music.fadeout(200) # TODO: BLOCKS WHILE FADING OUT
+			pygame.mixer.music.load(MUSIC[str(state.__name__)])
+			pygame.mixer.music.play()
+			if DEBUG: print("current music: %s" % MUSIC[str(state.__name__)])
+			adjust_music.laststate = state
+		except AttributeError:
+			pass
+
+
 # final inits
 state = menu
-laststate = game # just needs to be something else than state
+adjust_music.laststate = game # just needs to be something else than state
 events = []
 
 if DEBUG: print("entering main game loop")
@@ -281,15 +292,7 @@ while state:
 		continue
 
 	if (MUSIC['active']):
-		if laststate != state:
-			try:
-				#pygame.mixer.music.fadeout(200) # TODO: BLOCKS WHILE FADING OUT
-				pygame.mixer.music.load(MUSIC[str(state.__name__)])
-				pygame.mixer.music.play()
-				if DEBUG: print("current music: %s" % MUSIC[str(state.__name__)])
-				laststate = state
-			except AttributeError:
-				pass
+		adjust_music(state)
 
 	if state is game:
 		# move player
@@ -328,10 +331,6 @@ while state:
 
 
 # tidy up and quit
-
-if isinstance(hask, ctypes.CDLL):
-	if DEBUG: print("exiting haskell lib")
-	hask.hs_exit()
 if DEBUG: print("quitting pygame")
 pygame.quit()
 if DEBUG: print("terminating process")
