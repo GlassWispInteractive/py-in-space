@@ -6,14 +6,14 @@ import pygame
 from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEYUP, KEYDOWN, QUIT
 from random import randint
 
-DEBUG = True
+DEBUG = False
 
 pygame.init()
 
 MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
 HUD_FONT = pygame.font.Font("res/pixel.ttf", 20)
 
-MUSIC = {'active': True,
+MUSIC = {'active': False,
 			'menu': "res/ObservingTheStar.ogg",
 			'game': "res/DataCorruption.ogg"
 		}
@@ -50,10 +50,16 @@ SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
 					  'enemy123deathA', 'enemy123deathB', 'ufodeath']
 		 }
 
+
+
+
+
+
 # helper functions
 getsurface = lambda s: SPRITES[s] if s in SPRITES else pygame.image.load('res/' + s + '.png').convert_alpha()
 getogg = lambda s: SOUNDS[s] if s in SOUNDS else pygame.mixer.Sound('res/' + s + '.ogg')
 playsound = lambda s: getogg(s).play()
+
 
 
 def render(func=None):
@@ -71,6 +77,7 @@ def render(func=None):
 		TIMER.tick(FPS)
 		pygame.display.update()
 render.funcs = []
+
 
 
 @render
@@ -95,22 +102,24 @@ def starsky():
 starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in range(randint(5, 10))]
 
 
+
 @render
 def milestone():
 	''' shows milestone '''
-	if not LEAGUE or 0 < LEAGUE[0]: return # TODO: 0 replace with player.score
+	if not LEAGUE or player.score < LEAGUE[0]: return
+
 	# initializing
 	state = milestone
 	new_level = 6 - len(LEAGUE) # 6 leagues - remaining milestones
 	LEAGUE.pop(0)
 
-	# get sprite, animation
-	# spriteLeague = getsurface('league' + str(new_level))
+	# TODO: big message - you got the next level
+	print(new_level)
 
-
-	# TODO: increase difficulty
-	player.thunderMax = 9 - new_level
+	# TODO: add ore stuff
+	player.thunderMax = 7 - new_level
 	player.shield = max(0, player.shield - 1)
+
 
 
 @render
@@ -125,6 +134,7 @@ def menu():
 	label = MENU_FONT.render("Press ENTER to start", 1, TEXT_COLOR)
 	pos = label.get_rect(centerx = 450, centery = 330)
 	DISPLAY.blit(label, pos)
+
 
 
 @render
@@ -156,6 +166,10 @@ def player():
 		if shot.rect.y < -20:
 			player.shots.remove(shot)
 
+	# TODO: move the shots of the invaders
+	for shot in invaders.shots:
+		pass
+
 	# reload thunder
 	player.reload = (player.reload + 1) % 100
 	if player.reload == 99 and player.thunder < 9:
@@ -171,6 +185,16 @@ def player():
 	player.shots.draw(DISPLAY) # these shots are fine when rendered by the group
 player.xUnits = 56
 player.movement = 7
+# TODO: edit below
+player.health	= 3
+player.shield	= 0
+player.thunder	= 9
+player.thunderMax = 9
+player.shots	= pygame.sprite.Group()
+player.cooldown	= 0
+player.score	= 0
+player.reload	= 0
+
 
 
 @render
@@ -180,17 +204,17 @@ def invaders():
 		e.pos = (e.pos[0] + x, e.pos[1] + y)
 
 	# no rendering if not in-game
-	if state is not game: return
+	if state is not game or len(invaders.mob) == 0: return
 
 	# mob variables
 	xMin = min(map(lambda e:e.pos[0], invaders.mob))
 	xMax = max(map(lambda e:e.pos[0], invaders.mob))
 
-	if tick % 20 == 0:
+	if tick % 50 == 0:
 		if invaders.dir == (True, 0):
-			if xMax >= 30: invaders.dir = (True, 3)
+			if xMax >= 30: invaders.dir = (True, 1)
 		elif invaders.dir == (False, 0):
-			if xMin <= 0: invaders.dir = (False, 3)
+			if xMin <= 0: invaders.dir = (False, 1)
 		else:
 			a, b = invaders.dir
 			invaders.dir = (not a, b - 1)
@@ -199,7 +223,7 @@ def invaders():
 		# move invader
 		x, y = invader.pos
 		# TODO: smoother movement
-		if tick % 20 == 0:
+		if tick % 50 == 0:
 			if invaders.dir == (True, 0):
 				if xMax < 30: x += 1
 			elif invaders.dir == (False, 0):
@@ -215,19 +239,21 @@ def invaders():
 		#invaders.mob.draw(DISPLAY) # TODO: flashes...?!
 		# Why do the enemies flicker when rendered by the Group?
 invaders.movement = 7
+# TODO: edit below
 invaders.dir = (True, 0)
+invaders.mob = pygame.sprite.Group()
+invaders.shots = pygame.sprite.Group()
 
-def initialize_game():
-	if DEBUG: print("initializing game mode")
-	player.health	= 3
-	player.shield	= 0
-	player.thunder	= 9
-	player.shots	= pygame.sprite.OrderedUpdates() # do these need to be ordered?
-	player.cooldown	= 0
-	player.score	= 0
-	player.reload	= 0
-	invaders.mob = pygame.sprite.OrderedUpdates() # do these need to be ordered?
 
+
+
+@render
+def spawn_invaders():
+	if len(invaders.mob) > 0 or len(invaders.shots) > 0 or len(player.shots) > 0: return
+	# full reload
+	player.thunder = player.thunderMax
+
+	# new invaders
 	for x in range(0,30,3):
 		for y in range(0, 18, 3):
 			next = pygame.sprite.Sprite()
@@ -235,6 +261,40 @@ def initialize_game():
 			next.rect = next.image.get_rect()
 			next.pos = (x, y)
 			invaders.mob.add(next)
+
+@render
+def spawn_shots():
+	# edge condition
+	if len(invaders.mob) == 0 or tick % 10 == 0: return
+
+	# get the list of the bottom invaders
+	bottom = {}
+	for invader in invaders.mob:
+		x, y = invader.pos
+		if x not in bottom or y > bottom[x][1]:
+			bottom[x] = (x, y)
+
+	# randomly creates a shot
+	if randint(1, 1000) > 995:
+		elem = bottom.items()[randint(0, len(bottom)-1)][1] # random pos
+
+		# invaders.shots.add(next) TODO: add sprites
+		print(elem)
+
+
+
+
+
+def initialize_game():
+	if DEBUG: print("initializing game mode")
+	player.health	= 3
+	player.shield	= 0
+	player.thunder	= 9
+	player.shots	= pygame.sprite.Group() # do these need to be ordered?
+	player.cooldown	= 0
+	player.score	= 0
+	player.reload	= 0
+	invaders.mob = pygame.sprite.Group() # do these need to be ordered?
 	invaders.shots = []
 
 
@@ -308,7 +368,6 @@ while state:
 		if K_SPACE in events and player.thunder > 0 and player.cooldown == 0:
 
 			player.thunder -= 1
-			player.reload = 0
 			player.cooldown = 7
 
 			#player.shots.append((player.xUnits, 0))
@@ -325,6 +384,7 @@ while state:
 		enemies_hit = len(pygame.sprite.groupcollide(player.shots, invaders.mob, True, True))
 		player.score += enemies_hit
 		player.thunder = min(9, enemies_hit + player.thunder)
+		if enemies_hit > 0: player.reload = 0
 
 	render() # waiting is done in render
 	tick = tick % 3000 + 1 # avoid overflow
@@ -335,3 +395,4 @@ if DEBUG: print("quitting pygame")
 pygame.quit()
 if DEBUG: print("terminating process")
 sys.exit()
+
