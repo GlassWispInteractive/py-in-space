@@ -6,14 +6,14 @@ import pygame
 from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEYUP, KEYDOWN, QUIT
 from random import randint
 
-DEBUG = False
+DEBUG = True
 
 pygame.init()
 
 MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
 HUD_FONT = pygame.font.Font("res/pixel.ttf", 20)
 
-MUSIC = {'active': False,
+MUSIC = {	'active': True,
 			'menu': "res/ObservingTheStar.ogg",
 			'game': "res/DataCorruption.ogg"
 		}
@@ -51,15 +51,10 @@ SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
 		 }
 
 
-
-
-
-
 # helper functions
 getsurface = lambda s: SPRITES[s] if s in SPRITES else pygame.image.load('res/' + s + '.png').convert_alpha()
 getogg = lambda s: SOUNDS[s] if s in SOUNDS else pygame.mixer.Sound('res/' + s + '.ogg')
 playsound = lambda s: getogg(s).play()
-
 
 
 def render(func=None):
@@ -77,7 +72,6 @@ def render(func=None):
 		TIMER.tick(FPS)
 		pygame.display.update()
 render.funcs = []
-
 
 
 @render
@@ -101,11 +95,12 @@ def starsky():
 # mode doesn't matter for the bg, so initialsing it once is ok
 starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in range(randint(5, 10))]
 
-
-
+"""
 @render
 def milestone():
 	''' shows milestone '''
+	if state is not game: return
+
 	if not LEAGUE or player.score < LEAGUE[0]: return
 
 	# initializing
@@ -116,11 +111,10 @@ def milestone():
 	# TODO: big message - you got the next level
 	print(new_level)
 
-	# TODO: add ore stuff
+	# TODO: add more stuff
 	player.thunderMax = 7 - new_level
 	player.shield = max(0, player.shield - 1)
-
-
+"""
 
 @render
 def menu():
@@ -134,7 +128,6 @@ def menu():
 	label = MENU_FONT.render("Press ENTER to start", 1, TEXT_COLOR)
 	pos = label.get_rect(centerx = 450, centery = 330)
 	DISPLAY.blit(label, pos)
-
 
 
 @render
@@ -160,16 +153,6 @@ def player():
 	# no rendering if not in-game
 	if state is not game: return
 
-	# move shots
-	for shot in player.shots:
-		shot.rect.y -= 7
-		if shot.rect.y < -20:
-			player.shots.remove(shot)
-
-	# TODO: move the shots of the invaders
-	for shot in invaders.shots:
-		pass
-
 	# reload thunder
 	player.reload = (player.reload + 1) % 100
 	if player.reload == 99 and player.thunder < 9:
@@ -179,27 +162,26 @@ def player():
 	if player.cooldown > 0:
 		player.cooldown -= 1
 
-	# render stuff
+	# move shots
+	for shot in player.shots:
+		shot.rect.y -= player.shotspeed
+		if shot.rect.y < -20:
+			player.shots.remove(shot)
+
+	# rendering
 	DISPLAY.blit(getsurface('player'), (32 + 7 * player.xUnits, 440))
-
-	player.shots.draw(DISPLAY) # these shots are fine when rendered by the group
+	player.shots.draw(DISPLAY)
 player.xUnits = 56
-player.movement = 7
-# TODO: edit below
-player.health	= 3
-player.shield	= 0
-player.thunder	= 9
+#player.speed = 7
+player.shotspeed = 7
 player.thunderMax = 9
-player.shots	= pygame.sprite.Group()
-player.cooldown	= 0
-player.score	= 0
-player.reload	= 0
-
 
 
 @render
 def invaders():
 	''' Renders enemies and their shots '''
+	if state is not game: return
+
 	def move(e, x, y):
 		e.pos = (e.pos[0] + x, e.pos[1] + y)
 
@@ -207,8 +189,8 @@ def invaders():
 	if state is not game or len(invaders.mob) == 0: return
 
 	# mob variables
-	xMin = min(map(lambda e:e.pos[0], invaders.mob))
-	xMax = max(map(lambda e:e.pos[0], invaders.mob))
+	xMin = min(map(lambda e: e.pos[0], invaders.mob))
+	xMax = max(map(lambda e: e.pos[0], invaders.mob))
 
 	if tick % 50 == 0:
 		if invaders.dir == (True, 0):
@@ -219,8 +201,8 @@ def invaders():
 			a, b = invaders.dir
 			invaders.dir = (not a, b - 1)
 
+	# move and render all invaders
 	for invader in invaders.mob:
-		# move invader
 		x, y = invader.pos
 		# TODO: smoother movement
 		if tick % 50 == 0:
@@ -230,26 +212,25 @@ def invaders():
 				if xMin > 0: x -= 1
 			else:
 				y += 1
-
 			invader.pos = (x, y)
-
-		# render invader
 		invader.rect.topleft = (26+25*x, 45+10*y)
-		DISPLAY.blit(invader.image, (invader.rect.x, invader.rect.y))
-		#invaders.mob.draw(DISPLAY) # TODO: flashes...?!
-		# Why do the enemies flicker when rendered by the Group?
-invaders.movement = 7
-# TODO: edit below
-invaders.dir = (True, 0)
-invaders.mob = pygame.sprite.Group()
-invaders.shots = pygame.sprite.Group()
+	invaders.mob.draw(DISPLAY)
 
-
+	# move and render all shots
+	for shot in invaders.shots:
+		shot.rect.y += invaders.shotspeed
+		if shot.rect.y > 520:
+			invaders.shots.remove(shot)
+	invaders.shots.draw(DISPLAY)
+#invaders.speed = 7
+invaders.shotspeed = 10
 
 
 @render
-def spawn_invaders():
+def invaders_spawn():
+	if state is not game: return
 	if len(invaders.mob) > 0 or len(invaders.shots) > 0 or len(player.shots) > 0: return
+
 	# full reload
 	player.thunder = player.thunderMax
 
@@ -260,11 +241,13 @@ def spawn_invaders():
 			next.image = getsurface('enemy'+str(y%3+1)+'a3')
 			next.rect = next.image.get_rect()
 			next.pos = (x, y)
+			next.rect.topleft = (26+25*x, 45+10*y)
 			invaders.mob.add(next)
 
+
 @render
-def spawn_shots():
-	# edge condition
+def invaders_shots_spawn():
+	if state is not game: return
 	if len(invaders.mob) == 0 or tick % 10 == 0: return
 
 	# get the list of the bottom invaders
@@ -275,14 +258,16 @@ def spawn_shots():
 			bottom[x] = (x, y)
 
 	# randomly creates a shot
-	if randint(1, 1000) > 995:
+	if randint(1, 1000) > 990: # TODO: Increase 900
 		elem = bottom.items()[randint(0, len(bottom)-1)][1] # random pos
 
-		# invaders.shots.add(next) TODO: add sprites
-		print(elem)
+		newshot = pygame.sprite.Sprite()
+		newshot.image = getsurface('enemyshot')
+		newshot.rect = newshot.image.get_rect()
+		newshot.rect.topleft = (26+25*elem[0], 45+10*elem[1]) # TODO: improvised positioning
+		invaders.shots.add(newshot)
 
-
-
+		if DEBUG: print('enemy fired a shot at', elem)
 
 
 def initialize_game():
@@ -290,12 +275,13 @@ def initialize_game():
 	player.health	= 3
 	player.shield	= 0
 	player.thunder	= 9
-	player.shots	= pygame.sprite.Group() # do these need to be ordered?
+	player.shots	= pygame.sprite.Group()
 	player.cooldown	= 0
 	player.score	= 0
 	player.reload	= 0
-	invaders.mob = pygame.sprite.Group() # do these need to be ordered?
-	invaders.shots = []
+	invaders.dir = (True, 0)
+	invaders.mob = pygame.sprite.Group()
+	invaders.shots = pygame.sprite.Group()
 
 
 def adjust_music(state):
@@ -358,19 +344,13 @@ while state:
 		# move player
 		if K_LEFT in events and player.xUnits > 0:
 			player.xUnits -= 1
-
-
 		elif K_RIGHT in events and player.xUnits < 112:
 			player.xUnits += 1
 
-
-		# shoot player
+		# player shoots
 		if K_SPACE in events and player.thunder > 0 and player.cooldown == 0:
-
 			player.thunder -= 1
 			player.cooldown = 7
-
-			#player.shots.append((player.xUnits, 0))
 			newshot = pygame.sprite.Sprite()
 			newshot.image = getsurface('playershot')
 			newshot.rect = newshot.image.get_rect()
