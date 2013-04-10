@@ -38,12 +38,13 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 			for s in [ 'award_bronze', 'award_silver', 'award_gold',
 				'coin_bronze', 'coin_silver', 'coin_gold',
 				'coin_stack', 'coin_stacks',
-				'ufo', 'enemyshot',
+				'ufo', 'enemyshot', 'dead3', 'dead4',
 				'player', 'playershot',
 				'empty', 'logo',
 				'heart', 'shield', 'lightning',
 				'fire', 'diamond', 'ruby' ]
 				+ ["enemy"+str(i)+s+str(x) for x in range(3,5) for s in ['a','b'] for i in range(1,4)]
+				+ ["league"+str(i) for i in range(0,6)]
 		}
 if DEBUG: print("precaching sounds")
 SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
@@ -109,14 +110,14 @@ starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in range(randint(
 def milestone():
 	''' shows milestone '''
 	if state is not game: return
-	
+
 	# show level label
 	if milestone.show > 0:
-		milestone.show -= 1 
+		milestone.show -= 1
 		label = MSG_FONT.render("LEVEL " + str(milestone.level), 1, (200, 50, 50))
 		pos = label.get_rect(centerx = 450, centery = 350)
 		DISPLAY.blit(label, pos)
-	
+
 	# next level
 	if not LEAGUE or player.score < LEAGUE[0]: return
 
@@ -124,7 +125,7 @@ def milestone():
 	milestone.level += 1
 	milestone.show = 100
 	LEAGUE.pop(0)
-	
+
 	# increase difficulty
 	player.thunderMax = 9 - milestone.level
 	player.shield = max(0, player.shield - 1)
@@ -207,7 +208,7 @@ def invaders():
 	xMin = min(map(lambda e: e.pos[0], invaders.mob))
 	xMax = max(map(lambda e: e.pos[0], invaders.mob))
 	yMax = max(map(lambda e: e.pos[1], invaders.mob))
-	
+
 	if tick % 50 == 0:
 		if invaders.dir == (True, 0):
 			if xMax >= 30: invaders.dir = (True, 1)
@@ -232,6 +233,12 @@ def invaders():
 		invader.rect.topleft = (26+25*x, 45+10*y)
 	invaders.mob.draw(DISPLAY)
 
+	# timeout for corpses
+	for corp in invaders.corpses:
+		corp.ttl = corp.ttl - 1 if corp.ttl > 0 else corp.ttl
+		if corp.ttl == 0: invaders.corpses.remove(corp)
+	invaders.corpses.draw(DISPLAY)
+
 	# move and render all shots
 	for shot in invaders.shots:
 		shot.rect.y += invaders.shotspeed
@@ -255,6 +262,7 @@ def invaders_spawn():
 		for y in range(0, 18, 3):
 			newenemy = PyInSpaceSprite('enemy'+str(y%3+1)+'a3', 26+25*x, 45+10*y)
 			newenemy.pos = (x, y)
+			newenemy.ttl = -1
 			invaders.mob.add(newenemy)
 
 
@@ -292,6 +300,7 @@ def initialize_game():
 	player.group.add(player.sprite)
 	invaders.dir = (True, 0)
 	invaders.mob = pygame.sprite.Group()
+	invaders.corpses = pygame.sprite.Group()
 	invaders.shots = pygame.sprite.Group()
 
 
@@ -370,14 +379,20 @@ while state:
 
 		# It'z time to make the magicz...
 		# noo, just doing the collision detection and dying in one line
-		enemies_hit = len(pygame.sprite.groupcollide(player.shots, invaders.mob, True, True))
-		player.score += enemies_hit
-		player.thunder = min(9, enemies_hit + player.thunder)
+		enemies_hit = pygame.sprite.groupcollide(invaders.mob, player.shots, False, True)
+		player.score += len(enemies_hit)
+		player.thunder = min(player.thunderMax, len(enemies_hit) + player.thunder)
 		if enemies_hit > 0: player.reload = 0
+		for enem in enemies_hit:
+			invaders.mob.remove(enem)
+			enem.image = getsurface('dead3')
+			enem.ttl = 10
+			invaders.corpses.add(enem)
 
+		# enemy shots hit the player
 		playercollide = pygame.sprite.spritecollide(player.sprite, invaders.shots, True)
 		if len(playercollide) > 0:
-			print("Hit player!")
+			if DEBUG: print("Hit player!")
 			player.health -= 1
 
 	render() # waiting is done in render
