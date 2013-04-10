@@ -58,7 +58,8 @@ playsound = lambda s: getogg(s).play()
 
 
 class PyInSpaceSprite(pygame.sprite.Sprite):
-	def __init__(pic,x,y):
+	def __init__(self, pic, x, y):
+		pygame.sprite.Sprite.__init__(self)
 		self.image = getsurface(pic)
 		self.rect = self.image.get_rect()
 		self.rect.topleft = (x,y)
@@ -245,12 +246,9 @@ def invaders_spawn():
 	# new invaders
 	for x in range(0,30,3):
 		for y in range(0, 18, 3):
-			next = pygame.sprite.Sprite()
-			next.image = getsurface('enemy'+str(y%3+1)+'a3')
-			next.rect = next.image.get_rect()
-			next.pos = (x, y)
-			next.rect.topleft = (26+25*x, 45+10*y)
-			invaders.mob.add(next)
+			newenemy = PyInSpaceSprite('enemy'+str(y%3+1)+'a3', 26+25*x, 45+10*y)
+			newenemy.pos = (x, y)
+			invaders.mob.add(newenemy)
 
 
 @render
@@ -268,13 +266,8 @@ def invaders_shots_spawn():
 	# randomly creates a shot
 	if randint(1, 1000) > 990: # TODO: Increase 900
 		elem = bottom.items()[randint(0, len(bottom)-1)][1] # random pos
-
-		newshot = pygame.sprite.Sprite()
-		newshot.image = getsurface('enemyshot')
-		newshot.rect = newshot.image.get_rect()
-		newshot.rect.topleft = (26+25*elem[0], 45+10*elem[1]) # TODO: improvised positioning
+		newshot = PyInSpaceSprite('enemyshot', 26+25*elem[0]+15, 45+10*elem[1]+6)
 		invaders.shots.add(newshot)
-
 		if DEBUG: print('enemy fired a shot at', elem)
 
 
@@ -287,10 +280,7 @@ def initialize_game():
 	player.cooldown	= 0
 	player.score	= 0
 	player.reload	= 0
-	player.sprite = pygame.sprite.Sprite()
-	player.sprite.image = getsurface('player')
-	player.sprite.rect = player.sprite.image.get_rect()
-	player.sprite.rect.y = 440
+	player.sprite = PyInSpaceSprite('player', 0, 440)
 	player.group = pygame.sprite.Group()
 	player.group.add(player.sprite)
 	invaders.dir = (True, 0)
@@ -366,10 +356,7 @@ while state:
 		if K_SPACE in events and player.thunder > 0 and player.cooldown == 0:
 			player.thunder -= 1
 			player.cooldown = 7
-			newshot = pygame.sprite.Sprite()
-			newshot.image = getsurface('playershot')
-			newshot.rect = newshot.image.get_rect()
-			newshot.rect.topleft = (55 + 7 * player.xUnits, 440)
+			newshot = PyInSpaceSprite('playershot', (55+7*player.xUnits), 440)
 			player.shots.add(newshot)
 			if DEBUG: print("player fired a shot at x=%d" % newshot.rect.x)
 			playsound('laser_single')
