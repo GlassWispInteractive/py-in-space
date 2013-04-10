@@ -57,6 +57,13 @@ getogg = lambda s: SOUNDS[s] if s in SOUNDS else pygame.mixer.Sound('res/' + s +
 playsound = lambda s: getogg(s).play()
 
 
+class PyInSpaceSprite(pygame.sprite.Sprite):
+	def __init__(pic,x,y):
+		self.image = getsurface(pic)
+		self.rect = self.image.get_rect()
+		self.rect.topleft = (x,y)
+
+
 def render(func=None):
 	''' decorator function for rendering '''
 	# store function
@@ -169,7 +176,8 @@ def player():
 			player.shots.remove(shot)
 
 	# rendering
-	DISPLAY.blit(getsurface('player'), (32 + 7 * player.xUnits, 440))
+	#DISPLAY.blit(getsurface('player'), (32 + 7 * player.xUnits, 440))
+	player.group.draw(DISPLAY)
 	player.shots.draw(DISPLAY)
 player.xUnits = 56
 #player.speed = 7
@@ -279,6 +287,12 @@ def initialize_game():
 	player.cooldown	= 0
 	player.score	= 0
 	player.reload	= 0
+	player.sprite = pygame.sprite.Sprite()
+	player.sprite.image = getsurface('player')
+	player.sprite.rect = player.sprite.image.get_rect()
+	player.sprite.rect.y = 440
+	player.group = pygame.sprite.Group()
+	player.group.add(player.sprite)
 	invaders.dir = (True, 0)
 	invaders.mob = pygame.sprite.Group()
 	invaders.shots = pygame.sprite.Group()
@@ -346,6 +360,7 @@ while state:
 			player.xUnits -= 1
 		elif K_RIGHT in events and player.xUnits < 112:
 			player.xUnits += 1
+		player.sprite.rect.x = 32 + 7 * player.xUnits
 
 		# player shoots
 		if K_SPACE in events and player.thunder > 0 and player.cooldown == 0:
@@ -365,6 +380,11 @@ while state:
 		player.score += enemies_hit
 		player.thunder = min(9, enemies_hit + player.thunder)
 		if enemies_hit > 0: player.reload = 0
+
+		playercollide = pygame.sprite.spritecollide(player.sprite, invaders.shots, True)
+		if len(playercollide) > 0:
+			print("Hit player!")
+			player.health -= 1
 
 	render() # waiting is done in render
 	tick = tick % 3000 + 1 # avoid overflow
