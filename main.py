@@ -384,6 +384,7 @@ while state:
 		player.thunder = min(player.thunderMax, len(enemies_hit) + player.thunder)
 		if enemies_hit > 0: player.reload = 0
 		for enem in enemies_hit:
+			playsound('enemy123deathA')
 			invaders.mob.remove(enem)
 			enem.image = getsurface('dead3')
 			enem.ttl = 10
