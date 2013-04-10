@@ -6,12 +6,13 @@ import pygame
 from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEYUP, KEYDOWN, QUIT
 from random import randint
 
-DEBUG = True
+DEBUG = False
 
 pygame.init()
 
 MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
 HUD_FONT = pygame.font.Font("res/pixel.ttf", 20)
+MSG_FONT = pygame.font.Font("res/pixel.ttf", 54)
 
 MUSIC = {	'active': True,
 			'menu': "res/ObservingTheStar.ogg",
@@ -24,7 +25,7 @@ TEXT_COLOR = (200, 200, 200)
 MOVEMENT_KEYS = [K_LEFT, K_RIGHT, K_SPACE]
 CONTROL_KEYS = [K_RETURN, K_ESCAPE, K_p]
 KEYS = MOVEMENT_KEYS + CONTROL_KEYS
-LEAGUE = [10, 50, 100, 500, 1000, 5000]
+LEAGUE = [0, 10, 50, 100, 500, 1000, 5000]
 
 # pygame inits
 pygame.display.set_caption('PyInSpace!')
@@ -88,7 +89,7 @@ def starsky():
 	if tick % 100 == 0:
 		for _ in range(randint(0, 25 - len(starsky.stars))):
 			starsky.stars.append((randint(22, 882), randint(-500, 0), 0))
-	# update and delete stars
+	# update and delete starsja, aber da hast du nirgendwo anders state geschrieben
 	if tick % 3 == 0:
 		starsky.stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7)
 						for x, y, z in starsky.stars if y < 500]
@@ -103,31 +104,36 @@ def starsky():
 # mode doesn't matter for the bg, so initialsing it once is ok
 starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in range(randint(5, 10))]
 
-"""
+
 @render
 def milestone():
 	''' shows milestone '''
 	if state is not game: return
-
+	
+	# show level label
+	if milestone.show > 0:
+		milestone.show -= 1 
+		label = MSG_FONT.render("LEVEL " + str(milestone.level), 1, (200, 50, 50))
+		pos = label.get_rect(centerx = 450, centery = 350)
+		DISPLAY.blit(label, pos)
+	
+	# next level
 	if not LEAGUE or player.score < LEAGUE[0]: return
 
 	# initializing
-	state = milestone
-	new_level = 6 - len(LEAGUE) # 6 leagues - remaining milestones
+	milestone.level += 1
+	milestone.show = 100
 	LEAGUE.pop(0)
-
-	# TODO: big message - you got the next level
-	print(new_level)
-
-	# TODO: add more stuff
-	player.thunderMax = 7 - new_level
+	
+	# increase difficulty
+	player.thunderMax = 9 - milestone.level
 	player.shield = max(0, player.shield - 1)
-"""
+milestone.level = 0
+milestone.show = 0
 
 @render
 def menu():
 	''' render the menu '''
-	# no rendering when not in menu
 	if state is not menu: return
 
 	DISPLAY.blit(getsurface('logo'), (157, 100))
@@ -200,7 +206,8 @@ def invaders():
 	# mob variables
 	xMin = min(map(lambda e: e.pos[0], invaders.mob))
 	xMax = max(map(lambda e: e.pos[0], invaders.mob))
-
+	yMax = max(map(lambda e: e.pos[1], invaders.mob))
+	
 	if tick % 50 == 0:
 		if invaders.dir == (True, 0):
 			if xMax >= 30: invaders.dir = (True, 1)
@@ -220,7 +227,7 @@ def invaders():
 			elif invaders.dir == (False, 0):
 				if xMin > 0: x -= 1
 			else:
-				y += 1
+				if yMax < 30: y += 1
 			invader.pos = (x, y)
 		invader.rect.topleft = (26+25*x, 45+10*y)
 	invaders.mob.draw(DISPLAY)
