@@ -27,7 +27,7 @@ TEXT_COLOR = (200, 200, 200)
 MOVEMENT_KEYS = [K_LEFT, K_RIGHT, K_SPACE]
 CONTROL_KEYS = [K_RETURN, K_ESCAPE, K_p]
 KEYS = MOVEMENT_KEYS + CONTROL_KEYS
-LEAGUE = [0, 10, 50, 100, 500, 1000, 5000]
+
 
 # pygame inits
 pygame.display.set_caption('PyInSpace!')
@@ -121,7 +121,7 @@ def lost():
 
 		if lost.show  == 0: state = menu
 	# end game
-	elif player.health < 0:
+	elif player.health <= 0:
 		lost.show = 300
 		state = lost
 lost.show = 0
@@ -140,17 +140,16 @@ def milestone():
 		DISPLAY.blit(label, pos)
 
 	# next level
-	if not LEAGUE or player.score < LEAGUE[0]: return
+	if not milestone.limits or player.score < milestone.limits[0]: return
 
 	# initializing
 	milestone.level += 1
 	milestone.show = 45
-	LEAGUE.pop(0)
+	milestone.limits.pop(0)
 
 	# increase difficulty
 	player.thunderMax = 9 - milestone.level
 	player.shield = max(0, player.shield - 1)
-milestone.level = 0
 milestone.show = 0
 
 
@@ -189,6 +188,7 @@ def player():
 	''' Player function which renders the player and holds its state '''
 	# no rendering if not in-game
 	if state is not game: return
+
 	# reload thunder
 	player.reload += 1
 
@@ -232,29 +232,29 @@ def invaders():
 	xMax = max(map(lambda e: e.pos[0], invaders.mob))
 	yMax = max(map(lambda e: e.pos[1], invaders.mob))
 
-	if tick % 50 == 0:
+	if tick % 10 == 0:
 		if invaders.dir == (True, 0):
-			if xMax >= 30: invaders.dir = (True, 1)
+			if xMax >= 150: invaders.dir = (True, 3)
 		elif invaders.dir == (False, 0):
-			if xMin <= 0: invaders.dir = (False, 1)
+			if xMin <= 0: invaders.dir = (False, 3)
 		else:
 			a, b = invaders.dir
 			invaders.dir = (not a, b - 1)
 
 	# move and render all invaders
-	for grps in [invaders.mob, invaders.corpses]:
-		for inv in grps:
-			x, y = inv.pos
-			# TODO: smoother movement
-			if tick % 50 == 0:
+	for mobs in [invaders.mob, invaders.corpses]:
+		for mob in mobs:
+			x, y = mob.pos
+			# move
+			if tick % 10 == 0:
 				if invaders.dir == (True, 0):
-					if xMax < 30: x += 1
+					if xMax < 150: x += 1
 				elif invaders.dir == (False, 0):
 					if xMin > 0: x -= 1
 				else:
-					if yMax < 30: y += 1
-				inv.pos = (x, y)
-			inv.rect.topleft = (26+25*x, 45+10*y)
+					if yMax < 150: y += 1
+				mob.pos = (x, y)
+			mob.rect.center = (77+5*x, 70+2*y)
 	for inv in invaders.mob:
 		inv.anim += randint(1,1) # animation: (0,0)=none  (0,1)=indiviual (1,1)=uniform
 		if inv.anim >= 20:
@@ -262,7 +262,6 @@ def invaders():
 		if inv.anim >= 40:
 			inv.image = getsurface('enemy1b3')
 			inv.anim = 0
-
 	invaders.mob.draw(DISPLAY)
 
 	# timeout for corpses
@@ -290,8 +289,8 @@ def invaders_spawn():
 	player.thunder = player.thunderMax
 
 	# new invaders
-	for x in range(0,30,3):
-		for y in range(0, 18, 3):
+	for x in range(0,150,15):
+		for y in range(0, 90, 15):
 			newenemy = PyInSpaceSprite('enemy'+str(y%3+1)+'a3', 26+25*x, 45+10*y)
 			newenemy.pos = (x, y)
 			newenemy.ttl = -1
@@ -334,6 +333,8 @@ def initialize_game():
 	invaders.mob = pygame.sprite.Group()
 	invaders.corpses = pygame.sprite.Group()
 	invaders.shots = pygame.sprite.Group()
+	milestone.level = 0
+	milestone.limits = [0, 10, 50, 100, 200, 500, 1000, 2000, 5000]
 
 
 def adjust_music(state):
@@ -414,6 +415,7 @@ while state:
 		enemies_hit = pygame.sprite.groupcollide(invaders.mob, player.shots, False, True)
 		player.score += len(enemies_hit)
 		player.thunder = min(player.thunderMax, len(enemies_hit) + player.thunder)
+
 		if len(enemies_hit) > 0:
 			player.reload = 0
 
