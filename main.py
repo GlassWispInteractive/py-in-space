@@ -18,7 +18,7 @@ LOST_FONT = pygame.font.Font("res/pixel.ttf", 120)
 MUSIC = {	'active': True,
 			'menu': "res/ObservingTheStar.ogg",
 			'game': "res/DataCorruption.ogg",
-			'lost': "res/DataCorruption.ogg"
+			'lost': "res/TragicAmbient.ogg"
 		}
 TIMER = pygame.time.Clock()
 FPS = 30 # 30 frames per second seem reasonable
@@ -67,6 +67,7 @@ class PyInSpaceSprite(pygame.sprite.Sprite):
 		self.rect.topleft = (x,y)
 
 
+
 def render(func=None):
 	''' decorator function for rendering '''
 	# store function
@@ -105,25 +106,28 @@ def starsky():
 # mode doesn't matter for the bg, so initialsing it once is ok
 starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in range(randint(5, 10))]
 
+
 @render
 def lost():
 	# no global inference
 	global state
 	if state not in [game, lost]: return
-	
+
 	# game over screen
 	if lost.show > 0:
 		label = LOST_FONT.render("GAME OVER!", 1, (200, 50, 50))
 		pos = label.get_rect(centerx = 450, centery = 250)
 		DISPLAY.blit(label, pos)
 		lost.show -= 1
-	
+
 		if lost.show  == 0: state = menu
 	# end game
 	elif player.health < 0:
 		lost.show = 300
 		state = lost
 lost.show = 0
+
+
 @render
 def milestone():
 	''' shows milestone '''
@@ -141,7 +145,7 @@ def milestone():
 
 	# initializing
 	milestone.level += 1
-	milestone.show = 100
+	milestone.show = 45
 	LEAGUE.pop(0)
 
 	# increase difficulty
@@ -149,6 +153,7 @@ def milestone():
 	player.shield = max(0, player.shield - 1)
 milestone.level = 0
 milestone.show = 0
+
 
 @render
 def menu():
@@ -298,7 +303,7 @@ def invaders_shots_spawn():
 			bottom[x] = (x, y)
 
 	# randomly creates a shot
-	if randint(1, 1000) > 990: # TODO: Increase 900
+	if randint(1, 1000) > 980: # default 990
 		elem = bottom.items()[randint(0, len(bottom)-1)][1] # random pos
 		newshot = PyInSpaceSprite('enemyshot', 26+25*elem[0]+15, 45+10*elem[1]+6)
 		invaders.shots.add(newshot)
@@ -402,7 +407,7 @@ while state:
 		player.thunder = min(player.thunderMax, len(enemies_hit) + player.thunder)
 		if enemies_hit > 0:
 			player.reload = 0
-		
+
 		for enem in enemies_hit:
 			playsound('enemy123deathA')
 			invaders.mob.remove(enem)
