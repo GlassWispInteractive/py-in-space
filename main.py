@@ -67,7 +67,6 @@ class PyInSpaceSprite(pygame.sprite.Sprite):
 		self.rect.topleft = (x,y)
 
 
-
 def render(func=None):
 	''' decorator function for rendering '''
 	# store function
@@ -190,10 +189,8 @@ def player():
 	''' Player function which renders the player and holds its state '''
 	# no rendering if not in-game
 	if state is not game: return
-	print("hi")
 	# reload thunder
 	player.reload += 1
-	print(player.reload)
 
 	if player.reload == 99 and player.thunder < player.thunderMax:
 		player.thunder += 1
@@ -245,9 +242,9 @@ def invaders():
 			invaders.dir = (not a, b - 1)
 
 	# move and render all invaders
-	for mobs in [invaders.mob, invaders.corpses]:
-		for mob in mobs:
-			x, y = mob.pos
+	for grps in [invaders.mob, invaders.corpses]:
+		for inv in grps:
+			x, y = inv.pos
 			# TODO: smoother movement
 			if tick % 50 == 0:
 				if invaders.dir == (True, 0):
@@ -256,8 +253,16 @@ def invaders():
 					if xMin > 0: x -= 1
 				else:
 					if yMax < 30: y += 1
-				mob.pos = (x, y)
-			mob.rect.topleft = (26+25*x, 45+10*y)
+				inv.pos = (x, y)
+			inv.rect.topleft = (26+25*x, 45+10*y)
+	for inv in invaders.mob:
+		inv.anim += randint(1,1) # animation: (0,0)=none  (0,1)=indiviual (1,1)=uniform
+		if inv.anim >= 20:
+			inv.image = getsurface('enemy1a3')
+		if inv.anim >= 40:
+			inv.image = getsurface('enemy1b3')
+			inv.anim = 0
+
 	invaders.mob.draw(DISPLAY)
 
 	# timeout for corpses
@@ -290,6 +295,7 @@ def invaders_spawn():
 			newenemy = PyInSpaceSprite('enemy'+str(y%3+1)+'a3', 26+25*x, 45+10*y)
 			newenemy.pos = (x, y)
 			newenemy.ttl = -1
+			newenemy.anim = 0
 			invaders.mob.add(newenemy)
 
 
@@ -408,7 +414,6 @@ while state:
 		enemies_hit = pygame.sprite.groupcollide(invaders.mob, player.shots, False, True)
 		player.score += len(enemies_hit)
 		player.thunder = min(player.thunderMax, len(enemies_hit) + player.thunder)
-		print(player.thunder)
 		if len(enemies_hit) > 0:
 			player.reload = 0
 
