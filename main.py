@@ -190,11 +190,14 @@ def player():
 	''' Player function which renders the player and holds its state '''
 	# no rendering if not in-game
 	if state is not game: return
-
+	print("hi")
 	# reload thunder
-	player.reload = (player.reload + 1) % 100
-	if player.reload == 99 and player.thunder < 9:
+	player.reload += 1
+	print(player.reload)
+
+	if player.reload == 99 and player.thunder < player.thunderMax:
 		player.thunder += 1
+		player.reload = 0
 
 	# release cooldown
 	if player.cooldown > 0:
@@ -405,7 +408,8 @@ while state:
 		enemies_hit = pygame.sprite.groupcollide(invaders.mob, player.shots, False, True)
 		player.score += len(enemies_hit)
 		player.thunder = min(player.thunderMax, len(enemies_hit) + player.thunder)
-		if enemies_hit > 0:
+		print(player.thunder)
+		if len(enemies_hit) > 0:
 			player.reload = 0
 
 		for enem in enemies_hit:
