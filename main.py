@@ -13,10 +13,12 @@ pygame.init()
 MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
 HUD_FONT = pygame.font.Font("res/pixel.ttf", 20)
 MSG_FONT = pygame.font.Font("res/pixel.ttf", 54)
+LOST_FONT = pygame.font.Font("res/pixel.ttf", 120)
 
 MUSIC = {	'active': True,
 			'menu': "res/ObservingTheStar.ogg",
-			'game': "res/DataCorruption.ogg"
+			'game': "res/DataCorruption.ogg",
+			'lost': "res/DataCorruption.ogg"
 		}
 TIMER = pygame.time.Clock()
 FPS = 30 # 30 frames per second seem reasonable
@@ -29,11 +31,9 @@ LEAGUE = [0, 10, 50, 100, 500, 1000, 5000]
 
 # pygame inits
 pygame.display.set_caption('PyInSpace!')
-if DEBUG: print("initialzing display")
 DISPLAY = pygame.display.set_mode((900, 500))
 
 # load all sprites at the beginning
-if DEBUG: print("precaching sprites")
 SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 			for s in [ 'award_bronze', 'award_silver', 'award_gold',
 				'coin_bronze', 'coin_silver', 'coin_gold',
@@ -46,7 +46,7 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 				+ ["enemy"+str(i)+s+str(x) for x in range(3,5) for s in ['a','b'] for i in range(1,4)]
 				+ ["league"+str(i) for i in range(0,6)]
 		}
-if DEBUG: print("precaching sounds")
+# load sounds
 SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
 			for s in ['laser_single', 'menu-confirm', 'confirm', 'playerdeath',
 					  'enemy123deathA', 'enemy123deathB', 'ufodeath']
@@ -105,7 +105,25 @@ def starsky():
 # mode doesn't matter for the bg, so initialsing it once is ok
 starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in range(randint(5, 10))]
 
-
+@render
+def lost():
+	# no global inference
+	global state
+	if state not in [game, lost]: return
+	
+	# game over screen
+	if lost.show > 0:
+		label = LOST_FONT.render("GAME OVER!", 1, (200, 50, 50))
+		pos = label.get_rect(centerx = 450, centery = 250)
+		DISPLAY.blit(label, pos)
+		lost.show -= 1
+	
+		if lost.show  == 0: state = menu
+	# end game
+	elif player.health < 0:
+		lost.show = 300
+		state = lost
+lost.show = 0
 @render
 def milestone():
 	''' shows milestone '''
@@ -219,18 +237,19 @@ def invaders():
 			invaders.dir = (not a, b - 1)
 
 	# move and render all invaders
-	for invader in invaders.mob:
-		x, y = invader.pos
-		# TODO: smoother movement
-		if tick % 50 == 0:
-			if invaders.dir == (True, 0):
-				if xMax < 30: x += 1
-			elif invaders.dir == (False, 0):
-				if xMin > 0: x -= 1
-			else:
-				if yMax < 30: y += 1
-			invader.pos = (x, y)
-		invader.rect.topleft = (26+25*x, 45+10*y)
+	for mobs in [invaders.mob, invaders.corpses]:
+		for mob in mobs:
+			x, y = mob.pos
+			# TODO: smoother movement
+			if tick % 50 == 0:
+				if invaders.dir == (True, 0):
+					if xMax < 30: x += 1
+				elif invaders.dir == (False, 0):
+					if xMin > 0: x -= 1
+				else:
+					if yMax < 30: y += 1
+				mob.pos = (x, y)
+			mob.rect.topleft = (26+25*x, 45+10*y)
 	invaders.mob.draw(DISPLAY)
 
 	# timeout for corpses
@@ -273,8 +292,8 @@ def invaders_shots_spawn():
 
 	# get the list of the bottom invaders
 	bottom = {}
-	for invader in invaders.mob:
-		x, y = invader.pos
+	for mob in invaders.mob:
+		x, y = mob.pos
 		if x not in bottom or y > bottom[x][1]:
 			bottom[x] = (x, y)
 
@@ -283,7 +302,6 @@ def invaders_shots_spawn():
 		elem = bottom.items()[randint(0, len(bottom)-1)][1] # random pos
 		newshot = PyInSpaceSprite('enemyshot', 26+25*elem[0]+15, 45+10*elem[1]+6)
 		invaders.shots.add(newshot)
-		if DEBUG: print('enemy fired a shot at', elem)
 
 
 def initialize_game():
@@ -382,7 +400,9 @@ while state:
 		enemies_hit = pygame.sprite.groupcollide(invaders.mob, player.shots, False, True)
 		player.score += len(enemies_hit)
 		player.thunder = min(player.thunderMax, len(enemies_hit) + player.thunder)
-		if enemies_hit > 0: player.reload = 0
+		if enemies_hit > 0:
+			player.reload = 0
+		
 		for enem in enemies_hit:
 			playsound('enemy123deathA')
 			invaders.mob.remove(enem)
