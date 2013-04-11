@@ -135,12 +135,12 @@ def milestone():
 	# show level label
 	if milestone.show > 0:
 		milestone.show -= 1
-		label = MSG_FONT.render("LEVEL " + str(milestone.level), 1, (200, 50, 50))
+		label = MSG_FONT.render("LEVEL " + str(milestone.level+1), 1, (200, 50, 50))
 		pos = label.get_rect(centerx = 450, centery = 350)
 		DISPLAY.blit(label, pos)
 
 	# next level
-	if not milestone.limits or player.score < milestone.limits[0]: return
+	if player.score < milestone.limits[milestone.level]: return
 
 	# initializing
 	milestone.level += 1
@@ -150,7 +150,6 @@ def milestone():
 	# increase difficulty
 	player.thunderMax = 9 - milestone.level
 	player.shield = max(0, player.shield - 1)
-milestone.show = 0
 
 
 @render
@@ -334,7 +333,8 @@ def initialize_game():
 	invaders.corpses = pygame.sprite.Group()
 	invaders.shots = pygame.sprite.Group()
 	milestone.level = 0
-	milestone.limits = [0, 10, 50, 100, 200, 500, 1000, 2000, 5000]
+	milestone.limits = [10, 50, 100, 200, 500, 1000, 2000, 5000]
+	milestone.show = 45 # initially show level 1
 
 
 def adjust_music(state):
