@@ -5,8 +5,9 @@ import pygame
 #from pygame.locals import *		# import pygame.locals as pyloc
 from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEYUP, KEYDOWN, QUIT
 from random import randint
+import datetime
 
-DEBUG = False
+DEBUG = True
 
 pygame.init()
 
@@ -14,6 +15,7 @@ MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
 HUD_FONT = pygame.font.Font("res/pixel.ttf", 20)
 MSG_FONT = pygame.font.Font("res/pixel.ttf", 54)
 LOST_FONT = pygame.font.Font("res/pixel.ttf", 120)
+TEXT_WHITE = (200, 200, 200)
 
 MUSIC = {	'active': True,
 			'menu': "res/ObservingTheStar.ogg",
@@ -22,14 +24,15 @@ MUSIC = {	'active': True,
 		}
 TIMER = pygame.time.Clock()
 FPS = 30 # 30 frames per second seem reasonable
+THUNDERMAX = 9
 tick = 0
-TEXT_COLOR = (200, 200, 200)
+
 MOVEMENT_KEYS = [K_LEFT, K_RIGHT, K_SPACE]
 CONTROL_KEYS = [K_RETURN, K_ESCAPE, K_p]
 KEYS = MOVEMENT_KEYS + CONTROL_KEYS
 
-
 # pygame inits
+if DEBUG: print("initializing")
 pygame.display.set_caption('PyInSpace!')
 DISPLAY = pygame.display.set_mode((900, 500))
 
@@ -38,7 +41,7 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 			for s in [ 'award_bronze', 'award_silver', 'award_gold',
 				'coin_bronze', 'coin_silver', 'coin_gold',
 				'coin_stack', 'coin_stacks',
-				'ufo', 'enemyshot', 'dead3', 'dead4',
+				'ufo', 'eA', 'eB', 'd', 'enemyshot', 'dead3', 'dead4',
 				'player', 'playershot',
 				'empty', 'logo',
 				'heart', 'shield', 'lightning',
@@ -60,7 +63,7 @@ playsound = lambda s: getogg(s).play()
 
 
 class PyInSpaceSprite(pygame.sprite.Sprite):
-	def __init__(self, pic, x, y):
+	def __init__(self, pic, x=0, y=0):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = getsurface(pic)
 		self.rect = self.image.get_rect()
@@ -114,16 +117,22 @@ def lost():
 
 	# game over screen
 	if lost.show > 0:
-		label = LOST_FONT.render("GAME OVER!", 1, (200, 50, 50))
-		pos = label.get_rect(centerx = 450, centery = 250)
-		DISPLAY.blit(label, pos)
+		info = zip( ["GAME OVER!", "Your Score:", str(player.score)],
+					[LOST_FONT, MSG_FONT, MSG_FONT],
+					[(450,250), (450,350), (450, 400)],
+					[(200,50,50), (200,200,200), (200,200,200)]
+				)
+		for text, font, pos, color in info:
+			label = font.render(text, 1, color)
+			posi = label.get_rect(centerx = pos[0], centery = pos[1])
+			DISPLAY.blit(label, posi)
 		lost.show -= 1
 
-		if lost.show  == 0: state = menu
+		if lost.show == 0: state = menu
 	# end game
 	elif player.health <= 0:
-		lost.show = 300
-		state = lost
+		lost.show = 300 # show for 10 seconds
+		state = lost # TODO: Exit by keypress
 lost.show = 0
 
 
@@ -147,9 +156,9 @@ def milestone():
 	milestone.show = 45
 	milestone.limits.pop(0)
 
-	# increase difficulty
-	player.thunderMax = 9 - milestone.level
-	player.shield = max(0, player.shield - 1)
+	# increase difficulty and reward a life
+	player.thunderMax = THUNDERMAX - milestone.level
+	player.health += 1
 
 
 @render
@@ -160,7 +169,7 @@ def menu():
 	DISPLAY.blit(getsurface('logo'), (157, 100))
 	pygame.draw.rect(DISPLAY, (192, 192, 192), (250, 300, 400, 60))
 	pygame.draw.rect(DISPLAY, (80, 80, 80), (255, 305, 390, 50))
-	label = MENU_FONT.render("Press ENTER to start", 1, TEXT_COLOR)
+	label = MENU_FONT.render("Press ENTER to start", 1, TEXT_WHITE)
 	pos = label.get_rect(centerx = 450, centery = 330)
 	DISPLAY.blit(label, pos)
 
@@ -171,13 +180,13 @@ def game():
 	# no rendering if not in-game
 	if state is not game: return
 
-	info = list(zip(list(map(getsurface, ['heart', 'shield', 'lightning', 'coin_stacks'])),
-			[0, 80, 160, 800],
-			list(map(str, [player.health, player.shield, player.thunder, player.score]))))
+	info = list(zip(list(map(getsurface, ['heart', 'lightning', 'coin_stacks'])),
+			[0, 80, 820],
+			list(map(str, [player.health, player.thunder, player.score]))))
 
 	for img, px, txt in info:
 		DISPLAY.blit(img, (4+px, 4))
-		label = HUD_FONT.render(txt, 1, TEXT_COLOR)
+		label = HUD_FONT.render(txt, 1, TEXT_WHITE)
 		pos = label.get_rect(left = 40+px, centery = 20)
 		DISPLAY.blit(label, pos)
 
@@ -190,6 +199,8 @@ def player():
 
 	# reload thunder
 	player.reload += 1
+	if tick % 150 == 0 and player.thunder < player.thunderMax: # give a shot every 5 seconds
+		player.thunder += 1 % (player.thunderMax+1)
 
 	if player.reload == 99 and player.thunder < player.thunderMax:
 		player.thunder += 1
@@ -212,7 +223,6 @@ def player():
 player.xUnits = 56
 #player.speed = 7
 player.shotspeed = 7
-player.thunderMax = 9
 
 
 @render
@@ -241,9 +251,9 @@ def invaders():
 			invaders.dir = (not a, b - 1)
 
 	# move and render all invaders
-	for mobs in [invaders.mob, invaders.corpses]:
-		for mob in mobs:
-			x, y = mob.pos
+	for mob in [invaders.mob, invaders.corpses]:
+		for inv in mob:
+			x, y = inv.pos
 			# move
 			if tick % 10 == 0:
 				if invaders.dir == (True, 0):
@@ -252,14 +262,14 @@ def invaders():
 					if xMin > 0: x -= 1
 				else:
 					if yMax < 150: y += 1
-				mob.pos = (x, y)
-			mob.rect.center = (77+5*x, 70+2*y)
+				inv.pos = (x, y)
+			inv.rect.center = (70+5*x, 70+2*y)
 	for inv in invaders.mob:
 		inv.anim += randint(1,1) # animation: (0,0)=none  (0,1)=indiviual (1,1)=uniform
 		if inv.anim >= 20:
-			inv.image = getsurface('enemy1a3')
+			inv.image = getsurface('eA')
 		if inv.anim >= 40:
-			inv.image = getsurface('enemy1b3')
+			inv.image = getsurface('eB')
 			inv.anim = 0
 	invaders.mob.draw(DISPLAY)
 
@@ -290,7 +300,7 @@ def invaders_spawn():
 	# new invaders
 	for x in range(0,150,15):
 		for y in range(0, 90, 15):
-			newenemy = PyInSpaceSprite('enemy'+str(y%3+1)+'a3', 26+25*x, 45+10*y)
+			newenemy = PyInSpaceSprite('eA')
 			newenemy.pos = (x, y)
 			newenemy.ttl = -1
 			newenemy.anim = 0
@@ -310,23 +320,25 @@ def invaders_shots_spawn():
 			bottom[x] = (x, y)
 
 	# randomly creates a shot
-	if randint(1, 1000) > 980: # default 990
-		elem = bottom.items()[randint(0, len(bottom)-1)][1] # random pos
-		newshot = PyInSpaceSprite('enemyshot', 26+25*elem[0]+15, 45+10*elem[1]+6)
-		invaders.shots.add(newshot)
+	if bottom and randint(1, 1000) > (980 - (milestone.level * 20)): # default 980
+			elem = bottom.items()[randint(0, len(bottom)-1)][1]
+			newshot = PyInSpaceSprite('enemyshot')
+			newshot.rect.center = (70+5*elem[0], 70+2*elem[1])
+			invaders.shots.add(newshot)
+			if DEBUG: print('enemy fired a shot at ' + str(newshot.rect.center))
 
 
 def initialize_game():
 	if DEBUG: print("initializing game mode")
-	player.health	= 3
-	player.shield	= 0
-	player.thunder	= 9
-	player.shots	= pygame.sprite.Group()
-	player.cooldown	= 0
-	player.score	= 0
-	player.reload	= 0
-	player.sprite = PyInSpaceSprite('player', 0, 440)
-	player.group = pygame.sprite.Group()
+	player.health     = 3
+	player.thunder    = THUNDERMAX # current thunder
+	player.thunderMax = THUNDERMAX # maximum thunder in current game
+	player.shots      = pygame.sprite.Group()
+	player.cooldown   = 0
+	player.score      = 0
+	player.reload     = 0
+	player.sprite     = PyInSpaceSprite('player', 0, 440)
+	player.group      = pygame.sprite.Group()
 	player.group.add(player.sprite)
 	invaders.dir = (True, 0)
 	invaders.mob = pygame.sprite.Group()
@@ -349,6 +361,13 @@ def adjust_music(state):
 			pass
 
 
+def show_fps(a):
+	dur = str(int(round(((datetime.datetime.now()-a).microseconds/1000.0), 0)))+"%"
+	txt = MENU_FONT.render(dur, 0, TEXT_WHITE)
+	pos = txt.get_rect(right = 900, bottom = 500)
+	DISPLAY.blit(txt, pos)
+
+
 # final inits
 state = menu
 adjust_music.laststate = game # just needs to be something else than state
@@ -357,6 +376,7 @@ events = []
 if DEBUG: print("entering main game loop")
 # main game loop
 while state:
+	a = datetime.datetime.now()
 
 	# event handling
 	for e in pygame.event.get():
@@ -407,14 +427,14 @@ while state:
 			player.cooldown = 7
 			newshot = PyInSpaceSprite('playershot', (55+7*player.xUnits), 440)
 			player.shots.add(newshot)
-			if DEBUG: print("player fired a shot at x=%d" % newshot.rect.x)
+			if DEBUG: print("player fired a shot at %s" % str(newshot.rect.center))
 			playsound('laser_single')
 
 		# It'z time to make the magicz...
 		# noo, just doing the collision detection and dying in one line
 		enemies_hit = pygame.sprite.groupcollide(invaders.mob, player.shots, False, True)
 		player.score += len(enemies_hit)
-		player.thunder = min(player.thunderMax, len(enemies_hit) + player.thunder)
+		player.thunder = (len(enemies_hit) + player.thunder) % (player.thunderMax+1)
 
 		if len(enemies_hit) > 0:
 			player.reload = 0
@@ -422,7 +442,7 @@ while state:
 		for enem in enemies_hit:
 			playsound('enemy123deathA')
 			invaders.mob.remove(enem)
-			enem.image = getsurface('dead3')
+			enem.image = getsurface('d')
 			enem.ttl = 10
 			invaders.corpses.add(enem)
 
@@ -432,6 +452,7 @@ while state:
 			if DEBUG: print("Hit player!")
 			player.health -= 1
 
+	if DEBUG: show_fps(a)
 	render() # waiting is done in render
 	tick = tick % 3000 + 1 # avoid overflow
 
@@ -441,4 +462,3 @@ if DEBUG: print("quitting pygame")
 pygame.quit()
 if DEBUG: print("terminating process")
 sys.exit()
-
