@@ -7,7 +7,7 @@ from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEY
 from random import randint
 import datetime
 
-DEBUG = True
+DEBUG = False
 
 pygame.init()
 
@@ -41,7 +41,7 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 			for s in [ 'award_bronze', 'award_silver', 'award_gold',
 				'coin_bronze', 'coin_silver', 'coin_gold',
 				'coin_stack', 'coin_stacks',
-				'ufo', 'eA', 'eB', 'd', 'enemyshot', 'dead3', 'dead4',
+				'ufo', 'enemyshot', 'dead3', 'dead4',
 				'player', 'playershot',
 				'empty', 'logo',
 				'heart', 'shield', 'lightning',
@@ -63,7 +63,7 @@ playsound = lambda s: getogg(s).play()
 
 
 class PyInSpaceSprite(pygame.sprite.Sprite):
-	def __init__(self, pic, x=0, y=0):
+	def __init__(self, pic='empty', x=0, y=0):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = getsurface(pic)
 		self.rect = self.image.get_rect()
@@ -218,7 +218,7 @@ def player():
 
 	# rendering
 	#DISPLAY.blit(getsurface('player'), (32 + 7 * player.xUnits, 440))
-	player.group.draw(DISPLAY)
+	player.grp.draw(DISPLAY)
 	player.shots.draw(DISPLAY)
 player.xUnits = 56
 #player.speed = 7
@@ -263,14 +263,14 @@ def invaders():
 				else:
 					if yMax < 150: y += 1
 				inv.pos = (x, y)
-			inv.rect.center = (70+5*x, 70+2*y)
+			inv.rect.center = (70+5*x, 100+2*y)
 	for inv in invaders.mob:
-		inv.anim += randint(1,1) # animation: (0,0)=none  (0,1)=indiviual (1,1)=uniform
-		if inv.anim >= 20:
-			inv.image = getsurface('eA')
-		if inv.anim >= 40:
-			inv.image = getsurface('eB')
-			inv.anim = 0
+		inv.animcnt += randint(1,1) # animation: (0,0)=none  (0,1)=indiviual (1,1)=uniform
+		if inv.animcnt >= 20:
+			inv.image = getsurface('enemy'+str(inv.kind)+'a'+'3')
+		if inv.animcnt >= 40:
+			inv.image = getsurface('enemy'+str(inv.kind)+'b'+'3')
+			inv.animcnt = 0
 	invaders.mob.draw(DISPLAY)
 
 	# timeout for corpses
@@ -286,7 +286,7 @@ def invaders():
 			invaders.shots.remove(shot)
 	invaders.shots.draw(DISPLAY)
 #invaders.speed = 7
-invaders.shotspeed = 10
+invaders.shotspeed = 9
 
 
 @render
@@ -300,10 +300,14 @@ def invaders_spawn():
 	# new invaders
 	for x in range(0,150,15):
 		for y in range(0, 90, 15):
-			newenemy = PyInSpaceSprite('eA')
-			newenemy.pos = (x, y)
+			kind = y/30+1
+			anim = 'a'
+			newenemy = PyInSpaceSprite('enemy'+str(kind)+anim+'3')
+			newenemy.kind = kind
+			newenemy.anim = anim
+			newenemy.pos = (x, y) # pos is used to calculate the actual xy coords
 			newenemy.ttl = -1
-			newenemy.anim = 0
+			newenemy.animcnt = 0
 			invaders.mob.add(newenemy)
 
 
@@ -323,9 +327,35 @@ def invaders_shots_spawn():
 	if bottom and randint(1, 1000) > (980 - (milestone.level * 20)): # default 980
 			elem = bottom.items()[randint(0, len(bottom)-1)][1]
 			newshot = PyInSpaceSprite('enemyshot')
-			newshot.rect.center = (70+5*elem[0], 70+2*elem[1])
+			newshot.rect.center = (70+5*elem[0], 100+2*elem[1]+8)
 			invaders.shots.add(newshot)
 			if DEBUG: print('enemy fired a shot at ' + str(newshot.rect.center))
+
+
+@render
+def ufo():
+	if state is not game: return
+
+	if ( (len(ufo.group)+len(ufo.corpses)) == 0
+	  and tick % 300 == 0 and randint(1, 1000) > 100): # 950?
+		ufo.group.add(PyInSpaceSprite('ufo', -90, 46))
+		if DEBUG: print 'ufo spawned'
+
+	for u in ufo.group:
+		if u.rect.x > 900:
+			ufo.group.remove(u)
+		else:
+			u.rect.x += ufo.speed
+
+	for c in ufo.corpses:
+		if c.ttl < 1:
+			ufo.corpses.remove(c)
+		else:
+			c.ttl -= 1
+
+	ufo.group.draw(DISPLAY)
+	ufo.corpses.draw(DISPLAY)
+ufo.speed = 5
 
 
 def initialize_game():
@@ -338,21 +368,23 @@ def initialize_game():
 	player.score      = 0
 	player.reload     = 0
 	player.sprite     = PyInSpaceSprite('player', 0, 440)
-	player.group      = pygame.sprite.Group()
-	player.group.add(player.sprite)
+	player.grp      = pygame.sprite.Group()
+	player.grp.add(player.sprite)
 	invaders.dir = (True, 0)
 	invaders.mob = pygame.sprite.Group()
 	invaders.corpses = pygame.sprite.Group()
 	invaders.shots = pygame.sprite.Group()
-	milestone.level = 0
+	ufo.group = pygame.sprite.Group()
+	ufo.corpses = pygame.sprite.Group()
+	milestone.level = 0 # initially show level 1
 	milestone.limits = [10, 50, 100, 200, 500, 1000, 2000, 5000]
-	milestone.show = 45 # initially show level 1
+	milestone.show = 45
 
 
 def adjust_music(state):
 	if adjust_music.laststate != state:
 		try:
-			pygame.mixer.music.fadeout(10) # TODO: BLOCKS WHILE FADING OUT
+			#pygame.mixer.music.fadeout(10) # TODO: BLOCKS WHILE FADING OUT
 			pygame.mixer.music.load(MUSIC[str(state.__name__)])
 			pygame.mixer.music.play()
 			if DEBUG: print("current music: %s" % MUSIC[str(state.__name__)])
@@ -431,20 +463,32 @@ while state:
 			playsound('laser_single')
 
 		# It'z time to make the magicz...
-		# noo, just doing the collision detection and dying in one line
+		# noo, just doing the collision detection in one line
 		enemies_hit = pygame.sprite.groupcollide(invaders.mob, player.shots, False, True)
 		player.score += len(enemies_hit)
 		player.thunder = (len(enemies_hit) + player.thunder) % (player.thunderMax+1)
-
 		if len(enemies_hit) > 0:
 			player.reload = 0
-
 		for enem in enemies_hit:
 			playsound('enemy123deathA')
 			invaders.mob.remove(enem)
-			enem.image = getsurface('d')
-			enem.ttl = 10
+			enem.image = getsurface('dead3')
+			enem.rect = enem.image.get_rect()
+			enem.kind = 3 # dead3 is as wide as enemy3
+			enem.ttl = 10 # show explosion for 1/3 second
 			invaders.corpses.add(enem)
+
+		# ufo collision detection
+		ufocollide = pygame.sprite.groupcollide(ufo.group, player.shots, False, True)
+		if len(ufocollide) > 0:
+			for u in ufocollide.keys():
+				playsound('ufodeath')
+				ufo.group.remove(u)
+				u.image = getsurface('ufodead')
+				u.ttl = 45
+				ufo.corpses.add(u)
+			player.health += 1
+			player.score += 10
 
 		# enemy shots hit the player
 		playercollide = pygame.sprite.spritecollide(player.sprite, invaders.shots, True)
