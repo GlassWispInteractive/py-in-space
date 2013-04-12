@@ -352,7 +352,7 @@ def initialize_game():
 def adjust_music(state):
 	if adjust_music.laststate != state:
 		try:
-			#pygame.mixer.music.fadeout(200) # TODO: BLOCKS WHILE FADING OUT
+			pygame.mixer.music.fadeout(10) # TODO: BLOCKS WHILE FADING OUT
 			pygame.mixer.music.load(MUSIC[str(state.__name__)])
 			pygame.mixer.music.play()
 			if DEBUG: print("current music: %s" % MUSIC[str(state.__name__)])
