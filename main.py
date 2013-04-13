@@ -7,7 +7,7 @@ from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEY
 from random import randint
 import datetime
 
-DEBUG = False
+DEBUG = True
 
 pygame.init()
 
@@ -51,8 +51,8 @@ SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
 		}
 # load sounds
 SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
-			for s in ['laser_single', 'menu-confirm', 'confirm', 'playerdeath',
-					  'enemy123deathA', 'enemy123deathB', 'ufodeath']
+			for s in [ 'laser_single.ogg', 'confirm.ogg', 'menu-confirm.ogg',
+				'playerdeath.ogg', 'playerhit.ogg', 'enemydeath.ogg', 'ufodeath.ogg']
 		 }
 
 
@@ -131,6 +131,7 @@ def lost():
 		if lost.show == 0: state = menu
 	# end game
 	elif player.health <= 0:
+		playsound('playerdeath')
 		lost.show = 300 # show for 10 seconds
 		state = lost # TODO: Exit by keypress
 lost.show = 0
@@ -148,7 +149,7 @@ def milestone():
 		pos = label.get_rect(centerx = 450, centery = 350)
 		DISPLAY.blit(label, pos)
 
-	# next level
+	# leave if next level isn't reached yet
 	if player.score < milestone.limits[milestone.level]: return
 
 	# initializing
@@ -234,49 +235,59 @@ def invaders():
 		e.pos = (e.pos[0] + x, e.pos[1] + y)
 
 	# no rendering if not in-game
-	if state is not game or len(invaders.mob) == 0: return
+	if state is not game or len(invaders.mob)+len(invaders.corpses) < 1: return
 
-	# mob variables
-	xMin = min(map(lambda e: e.pos[0], invaders.mob))
-	xMax = max(map(lambda e: e.pos[0], invaders.mob))
-	yMax = max(map(lambda e: e.pos[1], invaders.mob))
+	# This method also needs to work if there are no living enemies.
+	# After the player killed the last enemy on the screen there are
+	# only entities in invader.corpses for about half a second.
+	# So we only move stuff if there is at least 1 living invader.
+	if invaders.mob:
+		# mob variables
+		xMin = min(map(lambda e: e.pos[0], invaders.mob))
+		xMax = max(map(lambda e: e.pos[0], invaders.mob))
+		yMax = max(map(lambda e: e.pos[1], invaders.mob))
 
-	if tick % 10 == 0:
-		if invaders.dir == (True, 0):
-			if xMax >= 150: invaders.dir = (True, 3)
-		elif invaders.dir == (False, 0):
-			if xMin <= 0: invaders.dir = (False, 3)
-		else:
-			a, b = invaders.dir
-			invaders.dir = (not a, b - 1)
+		if tick % 10 == 0:
+			if invaders.dir == (True, 0):
+				if xMax >= 150: invaders.dir = (True, 3)
+			elif invaders.dir == (False, 0):
+				if xMin <= 0: invaders.dir = (False, 3)
+			else:
+				a, b = invaders.dir
+				invaders.dir = (not a, b - 1)
 
-	# move and render all invaders
-	for mob in [invaders.mob, invaders.corpses]:
-		for inv in mob:
-			x, y = inv.pos
-			# move
-			if tick % 10 == 0:
-				if invaders.dir == (True, 0):
-					if xMax < 150: x += 1
-				elif invaders.dir == (False, 0):
-					if xMin > 0: x -= 1
-				else:
-					if yMax < 150: y += 1
-				inv.pos = (x, y)
-			inv.rect.center = (70+5*x, 100+2*y)
-	for inv in invaders.mob:
-		inv.animcnt += randint(1,1) # animation: (0,0)=none  (0,1)=indiviual (1,1)=uniform
-		if inv.animcnt >= 20:
-			inv.image = getsurface('enemy'+str(inv.kind)+'a'+'3')
-		if inv.animcnt >= 40:
-			inv.image = getsurface('enemy'+str(inv.kind)+'b'+'3')
-			inv.animcnt = 0
-	invaders.mob.draw(DISPLAY)
+		# move all invaders and corpses
+		for mob in [invaders.mob, invaders.corpses]:
+			for inv in mob:
+				x, y = inv.pos
+				# move
+				if tick % 10 == 0:
+					if invaders.dir == (True, 0):
+						if xMax < 150: x += 1
+					elif invaders.dir == (False, 0):
+						if xMin > 0: x -= 1
+					else:
+						if yMax < 150: y += 1
+					inv.pos = (x, y)
+				inv.rect.center = (70+5*x, 100+2*y)
+
+		# animate and draw the living invaders
+		for inv in invaders.mob:
+			inv.animcnt += randint(1,1) # animation: (0,0)=none  (0,1)=indiviual (1,1)=uniform
+			if inv.animcnt >= 20:
+				inv.image = getsurface('enemy'+str(inv.kind)+'a'+'3')
+			if inv.animcnt >= 40:
+				inv.image = getsurface('enemy'+str(inv.kind)+'b'+'3')
+				inv.animcnt = 0
+		invaders.mob.draw(DISPLAY)
 
 	# timeout for corpses
 	for corp in invaders.corpses:
-		corp.ttl = corp.ttl - 1 if corp.ttl > 0 else corp.ttl
-		if corp.ttl == 0: invaders.corpses.remove(corp)
+		if corp.ttl > 0:
+			corp.ttl -= 1
+		else:
+			invaders.corpses.remove(corp)
+			print('removed corpse from invaders.corpses')
 	invaders.corpses.draw(DISPLAY)
 
 	# move and render all shots
@@ -292,7 +303,8 @@ invaders.shotspeed = 9
 @render
 def invaders_spawn():
 	if state is not game: return
-	if len(invaders.mob) > 0 or len(invaders.shots) > 0 or len(player.shots) > 0: return
+	#if len(invaders.mob) > 0 or len(invaders.shots) > 0 or len(player.shots) > 0: return
+	if (len(invaders.mob) + len(invaders.corpses)) > 0: return
 
 	# full reload
 	player.thunder = player.thunderMax
@@ -337,9 +349,9 @@ def ufo():
 	if state is not game: return
 
 	if ( (len(ufo.group)+len(ufo.corpses)) == 0
-	  and tick % 300 == 0 and randint(1, 1000) > 100): # 950?
+	  and tick % 300 == 0 and randint(1, 1000) > 800): # 950?
 		ufo.group.add(PyInSpaceSprite('ufo', -90, 46))
-		if DEBUG: print 'ufo spawned'
+		if DEBUG: print('ufo spawned')
 
 	for u in ufo.group:
 		if u.rect.x > 900:
@@ -466,14 +478,14 @@ while state:
 		# noo, just doing the collision detection in one line
 		enemies_hit = pygame.sprite.groupcollide(invaders.mob, player.shots, False, True)
 		player.score += len(enemies_hit)
-		player.thunder = (len(enemies_hit) + player.thunder) % (player.thunderMax+1)
+		player.thunder = min(player.thunderMax, (len(enemies_hit) + player.thunder))
 		if len(enemies_hit) > 0:
 			player.reload = 0
 		for enem in enemies_hit:
-			playsound('enemy123deathA')
+			playsound('enemydeath')
 			invaders.mob.remove(enem)
 			enem.image = getsurface('dead3')
-			enem.rect = enem.image.get_rect()
+			enem.rect = enem.image.get_rect() # potentially wider dead3 sprite
 			enem.kind = 3 # dead3 is as wide as enemy3
 			enem.ttl = 10 # show explosion for 1/3 second
 			invaders.corpses.add(enem)
@@ -494,6 +506,7 @@ while state:
 		playercollide = pygame.sprite.spritecollide(player.sprite, invaders.shots, True)
 		if len(playercollide) > 0:
 			if DEBUG: print("Hit player!")
+			playsound('playerhit')
 			player.health -= 1
 
 	if DEBUG: show_fps(a)
