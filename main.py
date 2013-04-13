@@ -8,6 +8,10 @@ from random import randint
 import datetime
 
 DEBUG = True
+X = 900
+Y = 500
+FPS = 30
+R = lambda x: int(round(x)) # handy wrapper for calculations
 
 pygame.init()
 
@@ -23,7 +27,6 @@ MUSIC = {	'active': True,
 			'lost': "res/TragicAmbient.ogg"
 		}
 TIMER = pygame.time.Clock()
-FPS = 30 # 30 frames per second seem reasonable
 THUNDERMAX = 9
 tick = 0
 
@@ -34,7 +37,7 @@ KEYS = MOVEMENT_KEYS + CONTROL_KEYS
 # pygame inits
 if DEBUG: print("initializing")
 pygame.display.set_caption('PyInSpace!')
-DISPLAY = pygame.display.set_mode((900, 500))
+DISPLAY = pygame.display.set_mode((X, Y))
 
 # load all sprites at the beginning
 SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
@@ -92,11 +95,11 @@ def starsky():
 	''' render astonishing star sky. '''
 	if tick % 100 == 0:
 		for _ in range(randint(0, 25 - len(starsky.stars))):
-			starsky.stars.append((randint(22, 882), randint(-500, 0), 0))
+			starsky.stars.append((randint(R(X*0.02), R(X*0.98)), randint(-Y, 0), 0))
 	# update and delete starsja, aber da hast du nirgendwo anders state geschrieben
 	if tick % 3 == 0:
 		starsky.stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7)
-						for x, y, z in starsky.stars if y < 500]
+						for x, y, z in starsky.stars if y < Y]
 	if tick % 100 == 0:
 		r = randint(0, len(starsky.stars) - 1)
 		if starsky.stars[r][2] == 0: starsky.stars[r] = (starsky.stars[r][0], starsky.stars[r][1], 1)
@@ -106,7 +109,7 @@ def starsky():
 		b = 60 + z % 190
 		pygame.draw.circle(DISPLAY, (b, b, b), (x, y), 2)
 # mode doesn't matter for the bg, so initialsing it once is ok
-starsky.stars = [(randint(50, 850), randint(50, 450), 0) for _ in range(randint(5, 10))]
+starsky.stars = [(randint(R(X*0.02), R(X*0.98)), randint(R(Y*0.1), R(Y*0.9)), 0) for _ in range(randint(8, 12))]
 
 
 @render
@@ -119,7 +122,7 @@ def lost():
 	if lost.show > 0:
 		info = zip( ["GAME OVER!", "Your Score:", str(player.score)],
 					[LOST_FONT, MSG_FONT, MSG_FONT],
-					[(450,250), (450,350), (450, 400)],
+					[(R(X*0.5),R(Y*0.4)), (R(X*0.5),R(Y*0.7)), (R(X*0.5), R(Y*0.8))],
 					[(200,50,50), (200,200,200), (200,200,200)]
 				)
 		for text, font, pos, color in info:
@@ -128,11 +131,12 @@ def lost():
 			DISPLAY.blit(label, posi)
 		lost.show -= 1
 
-		if lost.show == 0: state = menu
+		if lost.show == 0:
+			state = menu
 	# end game
-	elif player.health <= 0:
+	elif player.health < 0:
 		playsound('playerdeath')
-		lost.show = 300 # show for 10 seconds
+		lost.show = FPS*20 # show for 20 seconds at max
 		state = lost # TODO: Exit by keypress
 lost.show = 0
 
@@ -146,7 +150,7 @@ def milestone():
 	if milestone.show > 0:
 		milestone.show -= 1
 		label = MSG_FONT.render("LEVEL " + str(milestone.level+1), 1, (200, 50, 50))
-		pos = label.get_rect(centerx = 450, centery = 350)
+		pos = label.get_rect(centerx = R(X*0.5), centery = R(Y*0.7))
 		DISPLAY.blit(label, pos)
 
 	# leave if next level isn't reached yet
@@ -154,7 +158,7 @@ def milestone():
 
 	# initializing
 	milestone.level += 1
-	milestone.show = 45
+	milestone.show = R(FPS*1.5)
 	milestone.limits.pop(0)
 
 	# increase difficulty and reward a life
@@ -167,12 +171,15 @@ def menu():
 	''' render the menu '''
 	if state is not menu: return
 
-	DISPLAY.blit(getsurface('logo'), (157, 100))
-	pygame.draw.rect(DISPLAY, (192, 192, 192), (250, 300, 400, 60))
-	pygame.draw.rect(DISPLAY, (80, 80, 80), (255, 305, 390, 50))
+	logorect = getsurface('logo').get_rect()
+	logorect.center = (R(X*0.5), R(Y*0.3))
+	DISPLAY.blit(getsurface('logo'), logorect)
+	pygame.draw.rect(DISPLAY, (192, 192, 192), (R(X*0.2778), R(Y*0.6), R(X*0.4444), R(Y*0.12)))
+	pygame.draw.rect(DISPLAY, (80, 80, 80), (R(X*0.2833), R(Y*0.61), R(X*0.4333), R(Y*0.1)))
 	label = MENU_FONT.render("Press ENTER to start", 1, TEXT_WHITE)
-	pos = label.get_rect(centerx = 450, centery = 330)
+	pos = label.get_rect(centerx = R(X*0.5), centery = R(Y*0.66))
 	DISPLAY.blit(label, pos)
+menu.notgame = 0 # blocker. you have to wait a second after you come from the game over screen
 
 
 @render
@@ -182,13 +189,13 @@ def game():
 	if state is not game: return
 
 	info = list(zip(list(map(getsurface, ['heart', 'lightning', 'coin_stacks'])),
-			[0, 80, 820],
+			[0, R(X*0.0888), R(X*0.9111)],
 			list(map(str, [player.health, player.thunder, player.score]))))
 
 	for img, px, txt in info:
-		DISPLAY.blit(img, (4+px, 4))
+		DISPLAY.blit(img, (R(X*0.0044)+px, R(Y*0.008)))
 		label = HUD_FONT.render(txt, 1, TEXT_WHITE)
-		pos = label.get_rect(left = 40+px, centery = 20)
+		pos = label.get_rect(left = R(X*0.0444)+px, centery = R(Y*0.04))
 		DISPLAY.blit(label, pos)
 
 
@@ -269,7 +276,8 @@ def invaders():
 					else:
 						if yMax < 150: y += 1
 					inv.pos = (x, y)
-				inv.rect.center = (70+5*x, 100+2*y)
+				#inv.rect.center = (70+5*x, 100+2*y)
+				inv.rect.center = (R(X*0.0778)+R(X*0.005)*x, R(Y*0.2)+R(Y*0.004)*y) # non-optimal..
 
 		# animate and draw the living invaders
 		for inv in invaders.mob:
@@ -293,7 +301,7 @@ def invaders():
 	# move and render all shots
 	for shot in invaders.shots:
 		shot.rect.y += invaders.shotspeed
-		if shot.rect.y > 520:
+		if shot.rect.y > Y+20:
 			invaders.shots.remove(shot)
 	invaders.shots.draw(DISPLAY)
 #invaders.speed = 7
@@ -310,9 +318,11 @@ def invaders_spawn():
 	player.thunder = player.thunderMax
 
 	# new invaders
-	for x in range(0,150,15):
-		for y in range(0, 90, 15):
-			kind = y/30+1
+	#for x in range(0,150,15):
+	for x in range(0,R(X*0.1667),R(X*0.0167)):
+		#for y in range(0, 90, 15):
+		for y in range(0, R(Y*0.18), R(Y*0.03)):
+			kind = y/R(Y*0.06)+1 # TODO: does this work on any resolution?
 			anim = 'a'
 			newenemy = PyInSpaceSprite('enemy'+str(kind)+anim+'3')
 			newenemy.kind = kind
@@ -339,7 +349,8 @@ def invaders_shots_spawn():
 	if bottom and randint(1, 1000) > (980 - (milestone.level * 20)): # default 980
 			elem = bottom.items()[randint(0, len(bottom)-1)][1]
 			newshot = PyInSpaceSprite('enemyshot')
-			newshot.rect.center = (70+5*elem[0], 100+2*elem[1]+8)
+			#newshot.rect.center = (70+5*elem[0], 100+2*elem[1]+8)
+			newshot.rect.center = (R(X*0.0778)+R(X*0.005)*elem[0], R(Y*0.2)+R(Y*0.004)*elem[1]+8) # non-optimal too..
 			invaders.shots.add(newshot)
 			if DEBUG: print('enemy fired a shot at ' + str(newshot.rect.center))
 
@@ -349,12 +360,13 @@ def ufo():
 	if state is not game: return
 
 	if ( (len(ufo.group)+len(ufo.corpses)) == 0
-	  and tick % 300 == 0 and randint(1, 1000) > 800): # 950?
-		ufo.group.add(PyInSpaceSprite('ufo', -90, 46))
+	  and tick % (FPS*5) == 0
+	  and randint(1, 1000) > 800): # 20% every 5 seconds
+		ufo.group.add(PyInSpaceSprite('ufo', -100, R(Y*0.092)))
 		if DEBUG: print('ufo spawned')
 
 	for u in ufo.group:
-		if u.rect.x > 900:
+		if u.rect.x > X:
 			ufo.group.remove(u)
 		else:
 			u.rect.x += ufo.speed
@@ -367,7 +379,7 @@ def ufo():
 
 	ufo.group.draw(DISPLAY)
 	ufo.corpses.draw(DISPLAY)
-ufo.speed = 5
+ufo.speed = R(X*0.00556)
 
 
 def initialize_game():
@@ -379,7 +391,7 @@ def initialize_game():
 	player.cooldown   = 0
 	player.score      = 0
 	player.reload     = 0
-	player.sprite     = PyInSpaceSprite('player', 0, 440)
+	player.sprite     = PyInSpaceSprite('player', 0, R(Y*0.88))
 	player.grp      = pygame.sprite.Group()
 	player.grp.add(player.sprite)
 	invaders.dir = (True, 0)
@@ -390,7 +402,7 @@ def initialize_game():
 	ufo.corpses = pygame.sprite.Group()
 	milestone.level = 0 # initially show level 1
 	milestone.limits = [10, 50, 100, 200, 500, 1000, 2000, 5000]
-	milestone.show = 45
+	milestone.show = R(FPS*1.5)
 
 
 def adjust_music(state):
@@ -408,7 +420,7 @@ def adjust_music(state):
 def show_fps(a):
 	dur = str(int(round(((datetime.datetime.now()-a).microseconds/1000.0), 0)))+"%"
 	txt = MENU_FONT.render(dur, 0, TEXT_WHITE)
-	pos = txt.get_rect(right = 900, bottom = 500)
+	pos = txt.get_rect(right = X, bottom = Y)
 	DISPLAY.blit(txt, pos)
 
 
@@ -440,18 +452,26 @@ while state:
 			events.remove(e.key)
 
 	# start game
-	if state is menu and K_RETURN in events:
+	if state is menu and menu.notgame < 1 and K_RETURN in events:
 		if DEBUG: print("entering game")
 		initialize_game()
 		#playsound('menu-confirm')
 		state = game
 		continue
+	else:
+		menu.notgame = menu.notgame - 1 if menu.notgame > 0 else 0
 
 	# back to menu
 	if state is game and K_ESCAPE in events:
 		#cleanup_game() # ?
 		if DEBUG: print("leaving game")
 		state = menu
+		continue
+
+	if state is lost and (K_RETURN in events or K_ESCAPE in events or K_SPACE in events):
+		lost.show = 0
+		state = menu
+		menu.notgame = FPS # you have to wait a sec when u leave the lost screen by keypress
 		continue
 
 	if (MUSIC['active']):
@@ -463,13 +483,15 @@ while state:
 			player.xUnits -= 1
 		elif K_RIGHT in events and player.xUnits < 112:
 			player.xUnits += 1
-		player.sprite.rect.x = 32 + 7 * player.xUnits
+		#player.sprite.rect.x = 32 + 7 * player.xUnits
+		player.sprite.rect.x = R(X*0.03555556) + R(X*0.00777778) * player.xUnits
 
 		# player shoots
 		if K_SPACE in events and player.thunder > 0 and player.cooldown == 0:
 			player.thunder -= 1
 			player.cooldown = 7
-			newshot = PyInSpaceSprite('playershot', (55+7*player.xUnits), 440)
+			#newshot = PyInSpaceSprite('playershot', (55+7*player.xUnits), 440)
+			newshot = PyInSpaceSprite('playershot', (R(X*0.03555556)+R(X*0.00777778)*player.xUnits+23), R(Y*0.88)) # +23 bleibt
 			player.shots.add(newshot)
 			if DEBUG: print("player fired a shot at %s" % str(newshot.rect.center))
 			playsound('laser_single')
@@ -487,7 +509,7 @@ while state:
 			enem.image = getsurface('dead3')
 			enem.rect = enem.image.get_rect() # potentially wider dead3 sprite
 			enem.kind = 3 # dead3 is as wide as enemy3
-			enem.ttl = 10 # show explosion for 1/3 second
+			enem.ttl = R(FPS/3) # show explosion for 1/3 second
 			invaders.corpses.add(enem)
 
 		# ufo collision detection
@@ -497,7 +519,7 @@ while state:
 				playsound('ufodeath')
 				ufo.group.remove(u)
 				u.image = getsurface('ufodead')
-				u.ttl = 45
+				u.ttl = R(FPS*1.5)
 				ufo.corpses.add(u)
 			player.health += 1
 			player.score += 10
@@ -511,7 +533,7 @@ while state:
 
 	if DEBUG: show_fps(a)
 	render() # waiting is done in render
-	tick = tick % 3000 + 1 # avoid overflow
+	tick = tick % (FPS*100) + 1 # avoid overflow
 
 
 # tidy up and quit
