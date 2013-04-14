@@ -4,7 +4,7 @@ import sys
 import pygame
 #from pygame.locals import *		# import pygame.locals as pyloc
 from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEYUP, KEYDOWN, QUIT
-from random import randint
+from random import randint, randrange
 import datetime
 
 DEBUG = True
@@ -161,9 +161,8 @@ def milestone():
 	milestone.show = R(FPS*1.5)
 	milestone.limits.pop(0)
 
-	# increase difficulty and reward a life
+	# less shots
 	player.thunderMax = THUNDERMAX - milestone.level
-	player.health += 1
 
 
 @render
@@ -225,7 +224,6 @@ def player():
 			player.shots.remove(shot)
 
 	# rendering
-	#DISPLAY.blit(getsurface('player'), (32 + 7 * player.xUnits, 440))
 	player.grp.draw(DISPLAY)
 	player.shots.draw(DISPLAY)
 player.xUnits = 56
@@ -276,8 +274,8 @@ def invaders():
 					else:
 						if yMax < 150: y += 1
 					inv.pos = (x, y)
-				#inv.rect.center = (70+5*x, 100+2*y)
-				inv.rect.center = (R(X*0.0778)+R(X*0.005)*x, R(Y*0.2)+R(Y*0.004)*y) # non-optimal..
+				inv.rect.center = (70+5*x, 100+2*y)
+				#inv.rect.center = (R(X*0.0778)+R(X*0.005)*x, R(Y*0.2)+R(Y*0.004)*y) # non-optimal..
 
 		# animate and draw the living invaders
 		for inv in invaders.mob:
@@ -295,7 +293,7 @@ def invaders():
 			corp.ttl -= 1
 		else:
 			invaders.corpses.remove(corp)
-			print('removed corpse from invaders.corpses')
+			if DEBUG: print('removed corpse from invaders.corpses')
 	invaders.corpses.draw(DISPLAY)
 
 	# move and render all shots
@@ -346,11 +344,11 @@ def invaders_shots_spawn():
 			bottom[x] = (x, y)
 
 	# randomly creates a shot
-	if bottom and randint(1, 1000) > (980 - (milestone.level * 20)): # default 980
+	if bottom and randint(1, 1000) > (995 - (milestone.level * 5)): # default 990
 			elem = bottom.items()[randint(0, len(bottom)-1)][1]
 			newshot = PyInSpaceSprite('enemyshot')
-			#newshot.rect.center = (70+5*elem[0], 100+2*elem[1]+8)
-			newshot.rect.center = (R(X*0.0778)+R(X*0.005)*elem[0], R(Y*0.2)+R(Y*0.004)*elem[1]+8) # non-optimal too..
+			newshot.rect.center = (70+5*elem[0], 100+2*elem[1]+8)
+			#newshot.rect.center = (R(X*0.0778)+R(X*0.005)*elem[0], R(Y*0.2)+R(Y*0.004)*elem[1]+8) # non-optimal
 			invaders.shots.add(newshot)
 			if DEBUG: print('enemy fired a shot at ' + str(newshot.rect.center))
 
@@ -362,14 +360,18 @@ def ufo():
 	if ( (len(ufo.group)+len(ufo.corpses)) == 0
 	  and tick % (FPS*5) == 0
 	  and randint(1, 1000) > 800): # 20% every 5 seconds
-		ufo.group.add(PyInSpaceSprite('ufo', -100, R(Y*0.092)))
+		newufo = PyInSpaceSprite('ufo')
+		newufo.dir = randrange(-1,2,2) # -1=R->L 1=L->R
+		newufo.rect.x = -64 if newufo.dir > 0 else X
+		newufo.rect.y = R(Y*0.092)
+		ufo.group.add(newufo)
 		if DEBUG: print('ufo spawned')
 
 	for u in ufo.group:
-		if u.rect.x > X:
+		if u.rect.x < -84 or u.rect.x > X+20:
 			ufo.group.remove(u)
 		else:
-			u.rect.x += ufo.speed
+			u.rect.x += (ufo.speed * u.dir)
 
 	for c in ufo.corpses:
 		if c.ttl < 1:
@@ -483,15 +485,15 @@ while state:
 			player.xUnits -= 1
 		elif K_RIGHT in events and player.xUnits < 112:
 			player.xUnits += 1
-		#player.sprite.rect.x = 32 + 7 * player.xUnits
-		player.sprite.rect.x = R(X*0.03555556) + R(X*0.00777778) * player.xUnits
+		player.sprite.rect.x = 32 + 7 * player.xUnits
+		#player.sprite.rect.x = R(X*0.03556) + R(X*0.00778) * player.xUnits
 
 		# player shoots
 		if K_SPACE in events and player.thunder > 0 and player.cooldown == 0:
 			player.thunder -= 1
 			player.cooldown = 7
-			#newshot = PyInSpaceSprite('playershot', (55+7*player.xUnits), 440)
-			newshot = PyInSpaceSprite('playershot', (R(X*0.03555556)+R(X*0.00777778)*player.xUnits+23), R(Y*0.88)) # +23 bleibt
+			newshot = PyInSpaceSprite('playershot', (55+7*player.xUnits), 440)
+			#newshot = PyInSpaceSprite('playershot', (R(X*0.03556)+R(X*0.00778)*player.xUnits+23), R(Y*0.88))
 			player.shots.add(newshot)
 			if DEBUG: print("player fired a shot at %s" % str(newshot.rect.center))
 			playsound('laser_single')
@@ -521,7 +523,7 @@ while state:
 				u.image = getsurface('ufodead')
 				u.ttl = R(FPS*1.5)
 				ufo.corpses.add(u)
-			player.health += 1
+			player.health = player.health + 1 if player.health <= 10 else player.health
 			player.score += 10
 
 		# enemy shots hit the player
