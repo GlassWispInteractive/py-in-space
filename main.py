@@ -14,6 +14,7 @@ FPS = 30
 R = lambda x: int(round(x)) # handy wrapper for calculations
 
 pygame.init()
+pygame.mixer.init() # exe doesnt work without it and it doesnt hurt on linux
 
 MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
 HUD_FONT = pygame.font.Font("res/pixel.ttf", 20)
@@ -412,7 +413,7 @@ def adjust_music(state):
 		try:
 			#pygame.mixer.music.fadeout(10) # TODO: BLOCKS WHILE FADING OUT
 			pygame.mixer.music.load(MUSIC[str(state.__name__)])
-			pygame.mixer.music.play()
+			pygame.mixer.music.play(-1) # loop indefinitely
 			if DEBUG: print("current music: %s" % MUSIC[str(state.__name__)])
 			adjust_music.laststate = state
 		except AttributeError:
