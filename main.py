@@ -471,7 +471,7 @@ while state:
 		state = menu
 		continue
 
-	if state is lost and (K_RETURN in events or K_ESCAPE in events or K_SPACE in events):
+	if state is lost and (K_RETURN in events or K_ESCAPE in events):
 		lost.show = 0
 		state = menu
 		menu.notgame = FPS # you have to wait a sec when u leave the lost screen by keypress
