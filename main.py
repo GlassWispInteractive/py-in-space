@@ -1,26 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 *-*
-import sys
 import pygame
-#from pygame.locals import *		# import pygame.locals as pyloc
 from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEYUP, KEYDOWN, QUIT
 from random import randint, randrange
-import datetime
+import os.path as path
+from glob import glob
 
 DEBUG = False
 X = 900
 Y = 500
 FPS = 30
-R = lambda x: int(round(x)) # handy wrapper for calculations
+R = lambda x: int(round(x)) # wrapper for rounding
 
 pygame.init()
 pygame.mixer.init() # exe doesnt work without it and it doesnt hurt on linux
 
-MENU_FONT = pygame.font.Font("res/starcraft.ttf", 20)
+MENU_FONT = pygame.font.Font("res/starcraft.ttf", 22)
 HUD_FONT = pygame.font.Font("res/pixel.ttf", 20)
 MSG_FONT = pygame.font.Font("res/pixel.ttf", 54)
 LOST_FONT = pygame.font.Font("res/pixel.ttf", 120)
-TEXT_WHITE = (200, 200, 200)
 
 MUSIC = {	'active': True,
 			'menu': "res/ObservingTheStar.ogg",
@@ -28,7 +26,6 @@ MUSIC = {	'active': True,
 			'lost': "res/TragicAmbient.ogg"
 		}
 TIMER = pygame.time.Clock()
-THUNDERMAX = 9
 tick = 0
 
 MOVEMENT_KEYS = [K_LEFT, K_RIGHT, K_SPACE]
@@ -41,37 +38,29 @@ pygame.display.set_caption('PyInSpace!')
 DISPLAY = pygame.display.set_mode((X, Y))
 
 # load all sprites at the beginning
-SPRITES = {s : pygame.image.load('res/' + str(s) + '.png').convert_alpha()
-			for s in [ 'award_bronze', 'award_silver', 'award_gold',
-				'coin_bronze', 'coin_silver', 'coin_gold',
-				'coin_stack', 'coin_stacks',
-				'ufo', 'enemyshot', 'dead3', 'dead4',
-				'player', 'playershot',
-				'empty', 'logo',
-				'heart', 'shield', 'lightning',
-				'fire', 'diamond', 'ruby' ]
-				+ ["enemy"+str(i)+s+str(x) for x in range(3,5) for s in ['a','b'] for i in range(1,4)]
-				+ ["league"+str(i) for i in range(0,6)]
-		}
+SPRITES = { path.basename(path.splitext(s)[0])
+			: pygame.image.load(s).convert_alpha() for s in glob("res/*.png") }
+
 # load sounds
 SOUNDS = {s : pygame.mixer.Sound('res/' + str(s) + '.ogg')
 			for s in [ 'laser_single.ogg', 'confirm.ogg', 'menu-confirm.ogg',
 				'playerdeath.ogg', 'playerhit.ogg', 'enemydeath.ogg', 'ufodeath.ogg']
 		 }
 
-
 # helper functions
-getsurface = lambda s: SPRITES[s] if s in SPRITES else pygame.image.load('res/' + s + '.png').convert_alpha()
+getsurface = lambda s: SPRITES[s]
 getogg = lambda s: SOUNDS[s] if s in SOUNDS else pygame.mixer.Sound('res/' + s + '.ogg')
 playsound = lambda s: getogg(s).play()
-
-
-class PyInSpaceSprite(pygame.sprite.Sprite):
-	def __init__(self, pic='empty', x=0, y=0):
-		pygame.sprite.Sprite.__init__(self)
-		self.image = getsurface(pic)
-		self.rect = self.image.get_rect()
-		self.rect.topleft = (x,y)
+def PyInSpaceSprite(pic='empty', x=0, y=0):
+	newsprite = pygame.sprite.Sprite()
+	newsprite.image = getsurface(pic)
+	newsprite.rect = newsprite.image.get_rect()
+	newsprite.rect.topleft = (x,y)
+	return newsprite
+def draw_text(text, font, pos, color):
+	label = font.render(text, 1, color)
+	posi = label.get_rect(centerx = pos[0], centery = pos[1])
+	DISPLAY.blit(label, posi)
 
 
 def render(func=None):
@@ -80,15 +69,12 @@ def render(func=None):
 	if func:
 		render.funcs.append(func)
 		return func
-
 	# rendering process
 	else:
 		DISPLAY.fill((0, 0, 0))
 		for f in render.funcs:
 			if not hasattr(f, 'render') or state in f.render:
 				f()
-
-
 		TIMER.tick(FPS)
 		pygame.display.update()
 render.funcs = []
@@ -100,7 +86,7 @@ def starsky():
 	if tick % 100 == 0:
 		for _ in range(randint(0, 25 - len(starsky.stars))):
 			starsky.stars.append((randint(R(X*0.02), R(X*0.98)), randint(-Y, 0), 0))
-	# update and delete starsja, aber da hast du nirgendwo anders state geschrieben
+	# update and delete stars
 	if tick % 3 == 0:
 		starsky.stars = [(x, y + 1, z if z == 0 or z > 190 else z + 7)
 						for x, y, z in starsky.stars if y < Y]
@@ -116,30 +102,23 @@ def starsky():
 starsky.stars = [(randint(R(X*0.02), R(X*0.98)), randint(R(Y*0.1), R(Y*0.9)), 0) for _ in range(randint(8, 12))]
 
 
-
 @render
 def game():
 	''' Render Heads Up Display '''
-	# no rendering if not in-game
 	info = list(zip(list(map(getsurface, ['heart', 'lightning', 'coin_stacks'])),
 			[0, R(X*0.0888), R(X*0.9111)],
 			list(map(str, [player.health, player.thunder, player.score]))))
 
 	for img, px, txt in info:
 		DISPLAY.blit(img, (R(X*0.0044)+px, R(Y*0.008)))
-		label = HUD_FONT.render(txt, 1, TEXT_WHITE)
+		label = HUD_FONT.render(txt, 1, (200, 200, 200))
 		pos = label.get_rect(left = R(X*0.0444)+px, centery = R(Y*0.04))
 		DISPLAY.blit(label, pos)
 game.render = [game]
 
 
-
 @render
 def lost():
-	# no global inference
-	global state
-	if state not in [game, lost]: return
-
 	# game over screen
 	if lost.show > 0:
 		info = zip( ["GAME OVER!", "Your Score:", str(player.score)],
@@ -148,9 +127,7 @@ def lost():
 					[(200,50,50), (200,200,200), (200,200,200)]
 				)
 		for text, font, pos, color in info:
-			label = font.render(text, 1, color)
-			posi = label.get_rect(centerx = pos[0], centery = pos[1])
-			DISPLAY.blit(label, posi)
+			draw_text(text, font, pos, color)
 		lost.show -= 1
 
 		if lost.show == 0:
@@ -159,7 +136,7 @@ def lost():
 	elif player.health < 0:
 		playsound('playerdeath')
 		lost.show = FPS*20 # show for 20 seconds at max
-		state = lost # TODO: Exit by keypress
+		state = lost
 lost.render = [game, lost]
 lost.show = 0
 
@@ -183,8 +160,9 @@ def milestone():
 	milestone.limits.pop(0)
 
 	# less shots
-	player.thunderMax = THUNDERMAX - milestone.level
+	player.thunderMax = 9 - milestone.level
 milestone.render = [game]
+
 
 @render
 def menu():
@@ -194,7 +172,7 @@ def menu():
 	DISPLAY.blit(getsurface('logo'), logorect)
 	pygame.draw.rect(DISPLAY, (192, 192, 192), (R(X*0.2778), R(Y*0.6), R(X*0.4444), R(Y*0.12)))
 	pygame.draw.rect(DISPLAY, (80, 80, 80), (R(X*0.2833), R(Y*0.61), R(X*0.4333), R(Y*0.1)))
-	label = MENU_FONT.render("Press ENTER to start", 1, TEXT_WHITE)
+	label = MENU_FONT.render("Press ENTER to start", 1, (200, 200, 200))
 	pos = label.get_rect(centerx = R(X*0.5), centery = R(Y*0.66))
 	DISPLAY.blit(label, pos)
 menu.render = [menu]
@@ -230,6 +208,7 @@ player.xUnits = 56
 #player.speed = 7
 player.shotspeed = 7
 player.render = [game]
+
 
 @render
 def invaders():
@@ -291,7 +270,6 @@ def invaders():
 			corp.ttl -= 1
 		else:
 			invaders.corpses.remove(corp)
-			if DEBUG: print('removed corpse from invaders.corpses')
 	invaders.corpses.draw(DISPLAY)
 
 	# move and render all shots
@@ -329,6 +307,7 @@ def invaders_spawn():
 			invaders.mob.add(newenemy)
 invaders_spawn.render = [game]
 
+
 @render
 def invaders_shots_spawn():
 	if len(invaders.mob) == 0 or tick % 10 == 0: return
@@ -349,6 +328,7 @@ def invaders_shots_spawn():
 			invaders.shots.add(newshot)
 			if DEBUG: print('enemy fired a shot at ' + str(newshot.rect.center))
 invaders_shots_spawn.render = [game]
+
 
 @render
 def ufo():
@@ -383,8 +363,8 @@ ufo.speed = R(X*0.00556)
 def initialize_game():
 	if DEBUG: print("initializing game mode")
 	player.health     = 3
-	player.thunder    = THUNDERMAX # current thunder
-	player.thunderMax = THUNDERMAX # maximum thunder in current game
+	player.thunder    = 9 # current thunder
+	player.thunderMax = 9 # maximum thunder in current game
 	player.shots      = pygame.sprite.Group()
 	player.cooldown   = 0
 	player.score      = 0
@@ -415,13 +395,6 @@ def adjust_music(state):
 			pass
 
 
-def show_fps(a):
-	dur = str(int(round(((datetime.datetime.now()-a).microseconds/1000.0), 0)))+"%"
-	txt = MENU_FONT.render(dur, 0, TEXT_WHITE)
-	pos = txt.get_rect(right = X, bottom = Y)
-	DISPLAY.blit(txt, pos)
-
-
 # final inits
 state = menu
 adjust_music.laststate = game # just needs to be something else than state
@@ -431,9 +404,7 @@ pause = False
 if DEBUG: print("entering main game loop")
 # main game loop
 while state:
-	a = datetime.datetime.now()
 
-	# event handling
 	for e in pygame.event.get():
 		# quit event
 		if e.type == QUIT:
@@ -492,8 +463,6 @@ while state:
 					pause = False
 			events.remove(K_p)
 
-
-
 		# move player
 		if K_LEFT in events and player.xUnits > 0:
 			player.xUnits -= 1
@@ -551,9 +520,4 @@ while state:
 	render() # waiting is done in render
 	tick = tick % (FPS*100) + 1 # avoid overflow
 
-
-# tidy up and quit
-if DEBUG: print("quitting pygame")
 pygame.quit()
-if DEBUG: print("terminating process")
-sys.exit()
