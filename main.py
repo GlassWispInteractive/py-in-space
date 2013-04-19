@@ -108,7 +108,6 @@ def game():
 	info = list(zip(list(map(getsurface, ['heart', 'lightning', 'coin_stacks'])),
 			[0, R(X*0.0888), R(X*0.9111)],
 			list(map(str, [player.health, player.thunder, player.score]))))
-
 	for img, px, txt in info:
 		DISPLAY.blit(img, (R(X*0.0044)+px, R(Y*0.008)))
 		label = HUD_FONT.render(txt, 1, (200, 200, 200))
@@ -119,6 +118,8 @@ game.render = [game]
 
 @render
 def lost():
+	global state
+
 	# game over screen
 	if lost.show > 0:
 		info = zip( ["GAME OVER!", "Your Score:", str(player.score)],
@@ -320,7 +321,7 @@ def invaders_shots_spawn():
 			bottom[x] = (x, y)
 
 	# randomly creates a shot
-	if bottom and randint(1, 1000) > (995 - (milestone.level * 5)): # default 990
+	if bottom and randint(1, 1000) > (995 - (milestone.level * 5)): # default 995
 			elem = bottom.items()[randint(0, len(bottom)-1)][1]
 			newshot = PyInSpaceSprite('enemyshot')
 			newshot.rect.center = (70+5*elem[0], 100+2*elem[1]+8)
