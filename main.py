@@ -7,7 +7,7 @@ from pygame.locals import K_LEFT, K_RIGHT, K_SPACE, K_RETURN, K_ESCAPE, K_p, KEY
 from random import randint, randrange
 import datetime
 
-DEBUG = True
+DEBUG = False
 X = 900
 Y = 500
 FPS = 30
@@ -85,7 +85,10 @@ def render(func=None):
 	else:
 		DISPLAY.fill((0, 0, 0))
 		for f in render.funcs:
-			f()
+			if not hasattr(f, 'render') or state in f.render:
+				f()
+
+
 		TIMER.tick(FPS)
 		pygame.display.update()
 render.funcs = []
@@ -111,6 +114,24 @@ def starsky():
 		pygame.draw.circle(DISPLAY, (b, b, b), (x, y), 2)
 # mode doesn't matter for the bg, so initialsing it once is ok
 starsky.stars = [(randint(R(X*0.02), R(X*0.98)), randint(R(Y*0.1), R(Y*0.9)), 0) for _ in range(randint(8, 12))]
+
+
+
+@render
+def game():
+	''' Render Heads Up Display '''
+	# no rendering if not in-game
+	info = list(zip(list(map(getsurface, ['heart', 'lightning', 'coin_stacks'])),
+			[0, R(X*0.0888), R(X*0.9111)],
+			list(map(str, [player.health, player.thunder, player.score]))))
+
+	for img, px, txt in info:
+		DISPLAY.blit(img, (R(X*0.0044)+px, R(Y*0.008)))
+		label = HUD_FONT.render(txt, 1, TEXT_WHITE)
+		pos = label.get_rect(left = R(X*0.0444)+px, centery = R(Y*0.04))
+		DISPLAY.blit(label, pos)
+game.render = [game]
+
 
 
 @render
@@ -139,14 +160,13 @@ def lost():
 		playsound('playerdeath')
 		lost.show = FPS*20 # show for 20 seconds at max
 		state = lost # TODO: Exit by keypress
+lost.render = [game, lost]
 lost.show = 0
 
 
 @render
 def milestone():
 	''' shows milestone '''
-	if state is not game: return
-
 	# show level label
 	if milestone.show > 0:
 		milestone.show -= 1
@@ -164,13 +184,11 @@ def milestone():
 
 	# less shots
 	player.thunderMax = THUNDERMAX - milestone.level
-
+milestone.render = [game]
 
 @render
 def menu():
 	''' render the menu '''
-	if state is not menu: return
-
 	logorect = getsurface('logo').get_rect()
 	logorect.center = (R(X*0.5), R(Y*0.3))
 	DISPLAY.blit(getsurface('logo'), logorect)
@@ -179,32 +197,13 @@ def menu():
 	label = MENU_FONT.render("Press ENTER to start", 1, TEXT_WHITE)
 	pos = label.get_rect(centerx = R(X*0.5), centery = R(Y*0.66))
 	DISPLAY.blit(label, pos)
+menu.render = [menu]
 menu.notgame = 0 # blocker. you have to wait a second after you come from the game over screen
-
-
-@render
-def game():
-	''' Render Heads Up Display '''
-	# no rendering if not in-game
-	if state is not game: return
-
-	info = list(zip(list(map(getsurface, ['heart', 'lightning', 'coin_stacks'])),
-			[0, R(X*0.0888), R(X*0.9111)],
-			list(map(str, [player.health, player.thunder, player.score]))))
-
-	for img, px, txt in info:
-		DISPLAY.blit(img, (R(X*0.0044)+px, R(Y*0.008)))
-		label = HUD_FONT.render(txt, 1, TEXT_WHITE)
-		pos = label.get_rect(left = R(X*0.0444)+px, centery = R(Y*0.04))
-		DISPLAY.blit(label, pos)
 
 
 @render
 def player():
 	''' Player function which renders the player and holds its state '''
-	# no rendering if not in-game
-	if state is not game: return
-
 	# reload thunder
 	player.reload += 1
 	if tick % 150 == 0 and player.thunder < player.thunderMax: # give a shot every 5 seconds
@@ -230,13 +229,11 @@ def player():
 player.xUnits = 56
 #player.speed = 7
 player.shotspeed = 7
-
+player.render = [game]
 
 @render
 def invaders():
 	''' Renders enemies and their shots '''
-	if state is not game: return
-
 	def move(e, x, y):
 		e.pos = (e.pos[0] + x, e.pos[1] + y)
 
@@ -304,12 +301,12 @@ def invaders():
 			invaders.shots.remove(shot)
 	invaders.shots.draw(DISPLAY)
 #invaders.speed = 7
+invaders.render = [game]
 invaders.shotspeed = 9
 
 
 @render
 def invaders_spawn():
-	if state is not game: return
 	#if len(invaders.mob) > 0 or len(invaders.shots) > 0 or len(player.shots) > 0: return
 	if (len(invaders.mob) + len(invaders.corpses)) > 0: return
 
@@ -330,11 +327,10 @@ def invaders_spawn():
 			newenemy.ttl = -1
 			newenemy.animcnt = 0
 			invaders.mob.add(newenemy)
-
+invaders_spawn.render = [game]
 
 @render
 def invaders_shots_spawn():
-	if state is not game: return
 	if len(invaders.mob) == 0 or tick % 10 == 0: return
 
 	# get the list of the bottom invaders
@@ -352,12 +348,10 @@ def invaders_shots_spawn():
 			#newshot.rect.center = (R(X*0.0778)+R(X*0.005)*elem[0], R(Y*0.2)+R(Y*0.004)*elem[1]+8) # non-optimal
 			invaders.shots.add(newshot)
 			if DEBUG: print('enemy fired a shot at ' + str(newshot.rect.center))
-
+invaders_shots_spawn.render = [game]
 
 @render
 def ufo():
-	if state is not game: return
-
 	if ( (len(ufo.group)+len(ufo.corpses)) == 0
 	  and tick % (FPS*5) == 0
 	  and randint(1, 1000) > 800): # 20% every 5 seconds
@@ -382,6 +376,7 @@ def ufo():
 
 	ufo.group.draw(DISPLAY)
 	ufo.corpses.draw(DISPLAY)
+ufo.render = [game]
 ufo.speed = R(X*0.00556)
 
 
@@ -431,6 +426,7 @@ def show_fps(a):
 state = menu
 adjust_music.laststate = game # just needs to be something else than state
 events = []
+pause = False
 
 if DEBUG: print("entering main game loop")
 # main game loop
@@ -481,6 +477,23 @@ while state:
 		adjust_music(state)
 
 	if state is game:
+		if K_p in events:
+			# pause mode
+			pause = True
+			label = LOST_FONT.render("PAUSED", 1, (200,50,50))
+			pos = label.get_rect(centerx = R(X*0.5), centery = R(Y*0.5))
+			DISPLAY.blit(label, pos)
+			pygame.display.update()
+
+			# wait for unpause
+			while(pause):
+				e = pygame.event.wait()
+				if e.type == KEYDOWN and e.key == K_p:
+					pause = False
+			events.remove(K_p)
+
+
+
 		# move player
 		if K_LEFT in events and player.xUnits > 0:
 			player.xUnits -= 1
