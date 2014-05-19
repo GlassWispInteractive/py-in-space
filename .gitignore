@@ -4,6 +4,8 @@
 *.so
 *.hi
 *_stub.h
+.idea
+res-unused
 
 # Packages
 *.egg
