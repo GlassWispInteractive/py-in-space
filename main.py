@@ -124,7 +124,7 @@ def lost():
 	if lost.show > 0:
 		info = zip( ["Spring von der Bruecke!", "GAME OVER!", "Your Score:", str(player.score)],
 					[MSG_FONT, LOST_FONT, MSG_FONT, MSG_FONT],
-					[(R(X*0.5), R(X*0.15)), (R(X*0.5),R(Y*0.4)), (R(X*0.5),R(Y*0.7)), (R(X*0.5), R(Y*0.8))],
+					[(R(X*0.5),R(Y*0.4)), (R(X*0.5),R(Y*0.2)), (R(X*0.5),R(Y*0.7)), (R(X*0.5),R(Y*0.8))],
 					[(200,20,20), (200,50,50), (200,200,200), (200,200,200)]
 				)
 		for text, font, pos, color in info:
@@ -323,7 +323,7 @@ def invaders_shots_spawn():
 			bottom[x] = (x, y)
 
 	# randomly creates a shot
-	if bottom and randint(1, 1000) > (800 - (milestone.level * 5)): # default 995
+	if bottom and randint(1, 1000) > (900 - (milestone.level * 5)): # default 995
 			elem = bottom.items()[randint(0, len(bottom)-1)][1]
 			newshot = PyInSpaceSprite('enemyshot')
 			newshot.rect.center = (70+5*elem[0], 100+2*elem[1]+8)
